@@ -1,8 +1,8 @@
 # Retools
 
-> **Agentic software consultancy platform — powered by Cubicube™**
+> **Prompt-driven retooling platform — paste a repo, describe changes, get a preview.**
 
-Retools uses Cubicube's building tools and deployment mechanisms to deliver AI-powered software retooling as a service. Businesses submit retooling requests through a guided intake wizard, and Cubicube's agentic pipeline scopes, builds, and deploys solutions to the edge.
+Retools is the UX layer on top of the Cubicube™ / Pegasus build engine. Developers paste a GitHub repo URL, describe what they want changed in plain English, and Retools dispatches the Pegasus AI pipeline to clone, modify, build, and deploy a preview. No infrastructure setup required.
 
 **© 2026 Nexartis, LLC. All rights reserved.**
 
@@ -11,41 +11,102 @@ Retools uses Cubicube's building tools and deployment mechanisms to deliver AI-p
 ## How It Works
 
 ```
-Business submits retooling request (intake wizard)
+Developer pastes GitHub repo URL + describes changes
   ↓
-AI agent scopes the project (Anthropic Claude + Workers AI)
+Retools creates a retool job (D1) and dispatches Pegasus workflow
   ↓
-Cubicube build pipeline assembles the solution
+Pegasus clones repo → AI applies changes → builds → deploys preview
   ↓
-Preview deploy → Client approval → Production deploy
+Preview at *.cubicubes.ai → developer approves or refines
   ↓
-Cloudflare Workers edge deployment via Cubicube for Platforms
+Approved → deploy to production domain
 ```
 
-## 🚀 Features
-
-- **Guided Intake Wizard** — 5-step form capturing company context, current state, requirements, and constraints
-- **AI-Powered Scoping** — Anthropic Claude generates project scope, task breakdown, and estimates
-- **Project Dashboard** — Real-time status tracking through Submitted → Scoping → In Progress → Review → Deployed
-- **Message Thread** — Communicate with the agentic system and team throughout the project lifecycle
-- **Preview Deploys** — Review builds on staging URLs before going live
-- **Powered by Cubicube** — Leverages Cubicube's Workers for Platforms, deployment queues, and edge infrastructure
+Retools is **purely additive** — it doesn't modify Cubicube, the builder queue, or Pegasus. It's a new consumer of the existing pipeline via GitHub Actions `workflow_dispatch`.
 
 ---
 
-## 🏗️ Technical Stack
+## 🚀 Features
+
+- **Prompt-Driven Interface** — Paste a repo URL + type what you want changed. That's it.
+- **Live Pipeline Tracker** — Real-time status: Queued → Cloning → AI Customizing → Building → Deploying → Preview Ready
+- **Preview Deploys** — Changes deploy to `*.cubicubes.ai` sandbox URLs for review before going live
+- **Approve / Refine Loop** — Accept changes or refine your prompt for another iteration
+- **Webhook Integration** — HMAC-verified callbacks from Pegasus update job status in real-time
+- **Powered by Pegasus** — Leverages the full Cubicube AI build pipeline without any infrastructure changes
+
+---
+
+## 🏗️ Architecture
+
+```
+┌──────────────────────┐       workflow_dispatch        ┌──────────────────────────┐
+│  Retools (this repo) │  ─────────────────────────────▶│  Pegasus HB (GitHub Actions) │
+│  SvelteKit + CF D1   │                                │  clone → AI → build → deploy │
+│                      │◀─────────────────────────────  │                              │
+│  /api/retool         │       HMAC webhook callback    │  deploy-worker.yml           │
+│  /api/webhooks/pegasus│                               └──────────────────────────┘
+└──────────────────────┘                                           │
+         │                                                         ▼
+         │                                              ┌──────────────────────┐
+         ▼                                              │  *.cubicubes.ai      │
+┌──────────────────────┐                                │  Preview deployment  │
+│  Dashboard UI        │                                └──────────────────────┘
+│  Status pipeline     │
+│  Approve / Refine    │
+└──────────────────────┘
+```
+
+### Integration Contract
+
+Retools calls the **same** `workflow_dispatch` API that `cubicube_builder_queue` uses:
+
+| Field | Value |
+|---|---|
+| Workflow | `deploy-worker.yml` in `Nexartis/pegasus-horizon-breakthrough` |
+| `deployment_payload.schema_version` | `8` |
+| `deployment_payload.is_real_domain` | `false` (preview) / `true` (production) |
+| `deployment_payload.ai_mode` | `pegasus_hb` |
+| `deployment_payload.dispatch_namespace` | `retools-dispatch-namespace` |
+| Webhook callback | `POST /api/webhooks/pegasus` with HMAC signature |
+
+---
+
+## 🛠️ Technical Stack
 
 | Technology | Purpose |
 |---|---|
 | **SvelteKit 5** | Full-stack framework with Svelte 5 runes |
-| **Cloudflare Workers** | Edge deployment via Cubicube's platform |
-| **Cloudflare D1** | SQLite database at the edge |
-| **Cloudflare R2** | Object storage for project assets |
-| **Cloudflare Workers AI** | Edge AI for agentic scoping |
-| **Anthropic Claude** | Primary AI for scope generation and code generation |
+| **Cloudflare Workers** | Edge deployment |
+| **Cloudflare D1** | SQLite database (`retool_jobs`, `users`, `job_events`) |
+| **Cloudflare R2** | Asset storage |
 | **Tailwind CSS** | Utility-first styling |
-| **Drizzle ORM** | Type-safe database access |
-| **Resend** | Transactional email notifications |
+| **Drizzle ORM** | Type-safe database schema |
+| **Pegasus HB** | AI build pipeline (GitHub Actions) |
+
+---
+
+## 📡 API Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/retool` | Create retool job + dispatch Pegasus workflow |
+| `GET` | `/api/jobs/[id]` | Get job status and details |
+| `POST` | `/api/jobs/[id]/approve` | Approve preview → deploy to production |
+| `POST` | `/api/jobs/[id]/refine` | Submit refined prompt for another iteration |
+| `POST` | `/api/webhooks/pegasus` | HMAC-verified webhook for Pegasus status callbacks |
+
+### `POST /api/retool` — Example
+
+```json
+{
+  "repoUrl": "https://github.com/user/my-site",
+  "branch": "main",
+  "prompt": "Make the hero section darker and add a pricing page with three tiers"
+}
+```
+
+Returns `201` with `{ id, deploymentId, status: "queued" }`.
 
 ---
 
@@ -54,24 +115,24 @@ Cloudflare Workers edge deployment via Cubicube for Platforms
 ```
 src/
 ├── app.css              # Global styles (Tailwind)
-├── app.html             # HTML template
-├── app.d.ts             # TypeScript platform declarations
+├── app.d.ts             # TypeScript platform declarations (D1, R2, Secrets Store)
 ├── lib/
-│   ├── components/      # Shared UI components (Navbar, Footer)
-│   ├── db/
-│   │   └── schema.ts    # Drizzle ORM schema (7 tables)
+│   ├── components/      # Navbar, Footer
+│   ├── db/schema.ts     # Drizzle ORM schema (users, retool_jobs, job_events)
+│   ├── types/retool.ts  # Job statuses, pipeline stages, GitHub URL parser
 │   ├── server/          # Server-side utilities
 │   ├── stores/          # Client-side state
-│   ├── types/
-│   │   └── intake.ts    # Intake wizard type definitions
 │   └── utils/           # Shared utilities
 ├── routes/
-│   ├── +page.svelte     # Homepage (hero, use cases, pricing)
-│   ├── auth/            # Magic link authentication
-│   ├── dashboard/       # Project list and detail views
-│   │   └── [id]/        # Individual project tracking
-│   ├── intake/          # 5-step intake wizard
-│   └── api/             # API endpoints
+│   ├── +page.svelte     # Homepage — "Retool Your Website with AI"
+│   ├── retool/          # Repo URL + prompt form
+│   ├── dashboard/       # Job list + status pipeline tracker
+│   │   └── [id]/        # Individual job detail view
+│   └── api/
+│       ├── retool/      # POST — create job + dispatch
+│       ├── jobs/[id]/   # GET status, POST approve/refine
+│       └── webhooks/
+│           └── pegasus/ # HMAC-verified Pegasus callbacks
 └── migrations/
     └── 0001_initial_schema.sql
 ```
@@ -89,10 +150,7 @@ src/
 ### Setup
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Start development server
 pnpm dev
 ```
 
@@ -104,81 +162,63 @@ pnpm dev
 
 | Environment | Command | Database | URL |
 |---|---|---|---|
-| **Local** | `pnpm run deploy:local` | local | `localhost:5173` |
-| **Feature** | `pnpm run deploy:feature` | dev | `retools--<branch>.retools.dev` |
-| **Dev** | `pnpm run deploy:dev` | dev | `https://dev.retools.dev` |
-| **Prod** | `pnpm run deploy:prod` | prod | `https://retools.dev` |
+| **Feature** | `npx wrangler deploy --env feature` | `retools-db-dev` | `https://retools-feature.nexartis.workers.dev` |
+| **Dev** | `pnpm run deploy:dev` | `retools-db-dev` | `https://dev.retools.dev` |
+| **Prod** | `pnpm run deploy:prod` | `retools-db-prod` | `https://retools.dev` |
 
-### Feature Branch Testing
+### Current Test Deployment
 
-```bash
-pnpm run deploy:feature
+```
+https://retools-feature.nexartis.workers.dev
 ```
 
-Creates a branch-specific subdomain (e.g., `retools--intake-wizard.retools.dev`) using the dev database, allowing isolated testing without affecting dev or prod.
+Deployed via `feature` environment using D1 database `retools-db-dev` (`6f1f1028-7690-48f1-8a25-673306c23985`).
 
 ---
 
 ## ⚙️ Configuration
 
-Environment variables configured in `wrangler.jsonc`:
+### Environment Variables (`wrangler.jsonc`)
 
 | Variable | Description |
 |---|---|
-| `ENVIRONMENT` | Deployment environment (local/feature/development/production) |
-| `VITE_BASE_URL` | Application base URL |
-| `FROM_EMAIL` | Sender address for notifications |
+| `ENVIRONMENT` | `feature` / `development` / `production` |
+| `FROM_EMAIL` | Sender for notifications |
 | `CONTACT_EMAIL_TO` | Contact form recipient |
-| `LOG_LEVEL` | Logging verbosity (debug/info/warn) |
+| `LOG_LEVEL` | `debug` / `info` / `warn` |
 
-### Secrets (Cloudflare Secrets Store)
+### Secrets (Cloudflare Secrets Store `7abc511fc4b74147808e542ece047670`)
 
-| Secret | Description |
-|---|---|
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude AI |
-| `RESEND_API_KEY` | Resend email API key |
+| Binding | Secret Name | Purpose |
+|---|---|---|
+| `GITHUB_PAT` | `CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN` | GitHub PAT for workflow_dispatch |
+| `CUBICUBE_BUILDER_QUEUE_WEBHOOK` | `CUBICUBE_BUILDER_QUEUE_WEBHOOK` | HMAC key for webhook verification |
+| `ANTHROPIC_API_KEY` | `ANTHROPIC_API_KEY` | Claude AI (future) |
+| `RESEND_API_KEY` | `RESEND_API_KEY` | Transactional email (future) |
 
 ---
 
 ## 📝 Scripts
 
 ```bash
-# Development
 pnpm dev                # Start development server
 pnpm build              # Build for production
 pnpm check              # Run svelte-check type validation
-
-# Deployment
-pnpm run deploy:local   # Deploy to local environment
-pnpm run deploy:feature # Deploy feature branch
 pnpm run deploy:dev     # Deploy to dev
 pnpm run deploy:prod    # Deploy to production
-
-# Database
 pnpm run db:generate    # Generate Drizzle migrations
-pnpm run db:studio      # Open Drizzle Studio
-
-# Utilities
 pnpm run cf-typegen     # Generate Cloudflare types
 ```
 
 ---
 
-## 🔗 Powered by Cubicube
+## 🔗 Related Repositories
 
-Retools is built on top of the Cubicube™ platform, leveraging its core infrastructure:
-
-- **Cubicube Workers for Platforms** — Isolated edge deployments for each client project
-- **Cubicube Deployment Pipeline** — Queue-based build and deploy system
-- **Cubicube Observability** — Axiom-exported traces and logs across all workers
-- **Cloudflare Secrets Store** — Centralized secret management shared across the platform
-
-### Related Repositories
-
-| Repository | Description |
+| Repository | Role |
 |---|---|
-| [cubicube-com](https://github.com/Nexartis/cubicube-com) | Cubicube platform (parent) |
-| [pegasus-horizon-breakthrough](https://github.com/Nexartis/pegasus-horizon-breakthrough) | Build pipeline |
+| [cubicube-com](https://github.com/Nexartis/cubicube-com) | Cubicube platform (Retools does NOT modify this) |
+| [pegasus-horizon-breakthrough](https://github.com/Nexartis/pegasus-horizon-breakthrough) | AI build pipeline (Retools dispatches workflows here) |
+| [cubicube_builder_queue](https://github.com/Nexartis/cubicube_builder_queue) | Queue consumer (Retools bypasses this, dispatches directly) |
 
 ---
 
