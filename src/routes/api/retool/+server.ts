@@ -2,15 +2,13 @@
  * POST /api/retool
  *
  * Accepts a GitHub repo URL + prompt, creates a retool job,
- * and dispatches the Pegasus workflow via GitHub Actions workflow_dispatch.
+ * and enqueues a DeploymentMessage v8 to the Cubicube builder queue.
+ * The queue consumer handles GitHub Actions dispatch with a working PAT.
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { parseGitHubUrl } from '$lib/types/retool';
 
-const PEGASUS_REPO_OWNER = 'Nexartis';
-const PEGASUS_REPO_NAME = 'pegasus-horizon-breakthrough';
-const PEGASUS_WORKFLOW_FILE = 'deploy-worker.yml';
 const DEPLOYMENT_SCHEMA_VERSION = 8;
 
 export const POST: RequestHandler = async ({ request, platform }) => {
@@ -27,10 +25,15 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const parsed = parseGitHubUrl(repoUrl);
 	if (!parsed) throw error(400, 'Invalid GitHub URL. Expected: https://github.com/owner/repo');
 
+	// ── Check queue availability ─────────────────────────────────
+	const queue = env.BUILDER_QUEUE;
+	if (!queue) throw error(503, 'Builder queue not available');
+
 	// ── Generate IDs ─────────────────────────────────────────────
 	const jobId = crypto.randomUUID().replace(/-/g, '').slice(0, 21);
 	const deploymentId = `rt_${jobId}`;
 	const now = Date.now();
+	const domain = `${parsed.repo}-${jobId.slice(0, 8)}`;
 
 	// ── Insert job into DB ───────────────────────────────────────
 	await env.DB.prepare(
@@ -40,92 +43,51 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		.bind(jobId, 'anonymous', parsed.owner, parsed.repo, branch, prompt, deploymentId, now, now)
 		.run();
 
-	// ── Build Pegasus deployment payload ─────────────────────────
-	const domain = `${parsed.repo}-${jobId.slice(0, 8)}`;
-	const deploymentPayload = {
+	// ── Build DeploymentMessage v8 for builder queue ─────────────
+	const baseUrl = env.VITE_BASE_URL || 'https://retools.dev';
+	const deploymentMessage = {
+		schema_version: DEPLOYMENT_SCHEMA_VERSION,
 		deployment_id: deploymentId,
-		dispatch_namespace: 'retools-dispatch-namespace',
+		user_id: 'anonymous',
+		user_email: 'retools@nexartis.com',
+		user_name: 'Retools',
+		domain_id: jobId,
 		domain: `${domain}.cubicubes.ai`,
-		is_real_domain: false, // Preview → sandbox *.cubicubes.ai
+		is_real_domain: false,
 		cubicube_id: null,
 		base_type: null,
 		base_ref: null,
-		user_email: 'retools@nexartis.com',
-		user_name: 'Retools',
-		template_repo: {
-			owner: parsed.owner,
-			name: parsed.repo,
-			ref: branch
+		branch_name: `retools-${domain}`,
+		cube_config: {
+			domain: `${domain}.cubicubes.ai`,
+			userEmail: 'retools@nexartis.com',
+			userName: 'Retools',
+			customizations: {}
 		},
+		template_repo_owner: parsed.owner,
+		template_repo_name: parsed.repo,
+		template_repo_ref: branch,
 		addon_cubes: [],
-		custom_cube_bundle: null,
+		custom_cube_repo_url: null,
 		ai_prompt: prompt,
 		ai_mode: 'pegasus_hb',
-		schema_version: DEPLOYMENT_SCHEMA_VERSION,
+		orchestrator_registry_slug: null,
+		revert_to_commit: null,
+		webhook_url: `${baseUrl}/api/webhooks/pegasus`,
 		timestamp: new Date().toISOString()
 	};
 
-	// ── Get webhook URL for Pegasus callbacks ────────────────────
-	const baseUrl = env.VITE_BASE_URL || 'https://retools.dev';
-	const webhookUrl = `${baseUrl}/api/webhooks/pegasus`;
-
-	// ── Dispatch GitHub Actions workflow ──────────────────────────
-	let githubRunUrl: string | null = null;
+	// ── Send to builder queue ────────────────────────────────────
 	try {
-		const githubPat = await env.GITHUB_PAT.get();
-		const dispatchUrl = `https://api.github.com/repos/${PEGASUS_REPO_OWNER}/${PEGASUS_REPO_NAME}/actions/workflows/${PEGASUS_WORKFLOW_FILE}/dispatches`;
-
-		const dispatchRes = await fetch(dispatchUrl, {
-			method: 'POST',
-			headers: {
-				Authorization: `Bearer ${githubPat}`,
-				Accept: 'application/vnd.github.v3+json',
-				'Content-Type': 'application/json',
-				'User-Agent': 'Retools/1.0'
-			},
-			body: JSON.stringify({
-				ref: 'main',
-				inputs: {
-					branch_name: `retools-${domain}`,
-					environment: 'pegasus-horizon-breakthrough',
-					webhook_url: webhookUrl,
-					deployment_payload: JSON.stringify(deploymentPayload),
-					max_repair_attempts: '3'
-				}
-			})
-		});
-
-		if (!dispatchRes.ok) {
-			const errText = await dispatchRes.text();
-			console.error('GitHub dispatch failed:', dispatchRes.status, errText);
-			// Update job as failed
-			await env.DB.prepare(
-				`UPDATE retool_jobs SET status = 'failed', error_message = ?, updated_at = ? WHERE id = ?`
-			)
-				.bind(`GitHub dispatch failed: ${dispatchRes.status}`, Date.now(), jobId)
-				.run();
-			throw error(502, 'Failed to dispatch build workflow');
-		}
-
-		githubRunUrl = `https://github.com/${PEGASUS_REPO_OWNER}/${PEGASUS_REPO_NAME}/actions`;
+		await queue.send(deploymentMessage);
 	} catch (e) {
-		if (e && typeof e === 'object' && 'status' in e) throw e; // Re-throw SvelteKit errors
-		console.error('Dispatch error:', e);
+		console.error('Queue send error:', e);
 		await env.DB.prepare(
 			`UPDATE retool_jobs SET status = 'failed', error_message = ?, updated_at = ? WHERE id = ?`
 		)
-			.bind(`Dispatch error: ${String(e)}`, Date.now(), jobId)
+			.bind(`Queue error: ${String(e)}`, Date.now(), jobId)
 			.run();
-		throw error(500, 'Internal error dispatching build');
-	}
-
-	// ── Update job with run URL ──────────────────────────────────
-	if (githubRunUrl) {
-		await env.DB.prepare(
-			`UPDATE retool_jobs SET github_run_url = ?, updated_at = ? WHERE id = ?`
-		)
-			.bind(githubRunUrl, Date.now(), jobId)
-			.run();
+		throw error(500, 'Failed to enqueue deployment');
 	}
 
 	return json({ id: jobId, deploymentId, status: 'queued' }, { status: 201 });

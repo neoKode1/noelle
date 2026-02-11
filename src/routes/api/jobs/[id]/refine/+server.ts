@@ -3,19 +3,19 @@
  *
  * Creates a new child retool job with an updated prompt,
  * linked to the parent job via parent_job_id.
+ * Enqueues a DeploymentMessage v8 to the builder queue.
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { parseGitHubUrl } from '$lib/types/retool';
 
-const PEGASUS_REPO_OWNER = 'Nexartis';
-const PEGASUS_REPO_NAME = 'pegasus-horizon-breakthrough';
-const PEGASUS_WORKFLOW_FILE = 'deploy-worker.yml';
 const DEPLOYMENT_SCHEMA_VERSION = 8;
 
 export const POST: RequestHandler = async ({ params, request, platform }) => {
 	const env = platform?.env;
 	if (!env?.DB) throw error(503, 'Database not available');
+
+	const queue = env.BUILDER_QUEUE;
+	if (!queue) throw error(503, 'Builder queue not available');
 
 	const parentId = params.id;
 	const parentRow = await env.DB.prepare(`SELECT * FROM retool_jobs WHERE id = ?`).bind(parentId).first<Record<string, unknown>>();
@@ -30,6 +30,7 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 	const deploymentId = `rt_${jobId}`;
 	const now = Date.now();
 	const refinementCount = ((parentRow.refinement_count as number) || 0) + 1;
+	const domain = `${parentRow.github_repo}-${jobId.slice(0, 8)}`;
 
 	await env.DB.prepare(
 		`INSERT INTO retool_jobs (id, user_id, github_owner, github_repo, branch, prompt, status, deployment_id, parent_job_id, refinement_count, created_at, updated_at)
@@ -48,63 +49,49 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 		now
 	).run();
 
-	// ── Build deployment payload ─────────────────────────────────
-	const domain = `${parentRow.github_repo}-${jobId.slice(0, 8)}`;
-	const deploymentPayload = {
+	// ── Build DeploymentMessage v8 ───────────────────────────────
+	const baseUrl = env.VITE_BASE_URL || 'https://retools.dev';
+	const deploymentMessage = {
+		schema_version: DEPLOYMENT_SCHEMA_VERSION,
 		deployment_id: deploymentId,
-		dispatch_namespace: 'retools-dispatch-namespace',
+		user_id: 'anonymous',
+		user_email: 'retools@nexartis.com',
+		user_name: 'Retools',
+		domain_id: jobId,
 		domain: `${domain}.cubicubes.ai`,
 		is_real_domain: false,
 		cubicube_id: null,
 		base_type: null,
 		base_ref: null,
-		user_email: 'retools@nexartis.com',
-		user_name: 'Retools',
-		template_repo: {
-			owner: parentRow.github_owner,
-			name: parentRow.github_repo,
-			ref: parentRow.branch
+		branch_name: `retools-${domain}`,
+		cube_config: {
+			domain: `${domain}.cubicubes.ai`,
+			userEmail: 'retools@nexartis.com',
+			userName: 'Retools',
+			customizations: {}
 		},
+		template_repo_owner: parentRow.github_owner as string,
+		template_repo_name: parentRow.github_repo as string,
+		template_repo_ref: parentRow.branch as string,
 		addon_cubes: [],
-		custom_cube_bundle: null,
+		custom_cube_repo_url: null,
 		ai_prompt: prompt,
 		ai_mode: 'pegasus_hb',
-		schema_version: DEPLOYMENT_SCHEMA_VERSION,
+		orchestrator_registry_slug: null,
+		revert_to_commit: null,
+		webhook_url: `${baseUrl}/api/webhooks/pegasus`,
 		timestamp: new Date().toISOString()
 	};
 
-	// ── Dispatch ─────────────────────────────────────────────────
-	const githubPat = await env.GITHUB_PAT.get();
-	const baseUrl = env.VITE_BASE_URL || 'https://retools.dev';
-	const dispatchUrl = `https://api.github.com/repos/${PEGASUS_REPO_OWNER}/${PEGASUS_REPO_NAME}/actions/workflows/${PEGASUS_WORKFLOW_FILE}/dispatches`;
-
-	const res = await fetch(dispatchUrl, {
-		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${githubPat}`,
-			Accept: 'application/vnd.github.v3+json',
-			'Content-Type': 'application/json',
-			'User-Agent': 'Retools/1.0'
-		},
-		body: JSON.stringify({
-			ref: 'main',
-			inputs: {
-				branch_name: `retools-${domain}`,
-				environment: 'pegasus-horizon-breakthrough',
-				webhook_url: `${baseUrl}/api/webhooks/pegasus`,
-				deployment_payload: JSON.stringify(deploymentPayload),
-				max_repair_attempts: '3'
-			}
-		})
-	});
-
-	if (!res.ok) {
-		const errText = await res.text();
-		console.error('Refine dispatch failed:', res.status, errText);
+	// ── Send to builder queue ────────────────────────────────────
+	try {
+		await queue.send(deploymentMessage);
+	} catch (e) {
+		console.error('Refine queue error:', e);
 		await env.DB.prepare(
 			`UPDATE retool_jobs SET status = 'failed', error_message = ?, updated_at = ? WHERE id = ?`
-		).bind(`Dispatch failed: ${res.status}`, Date.now(), jobId).run();
-		throw error(502, 'Failed to dispatch refinement build');
+		).bind(`Queue error: ${String(e)}`, Date.now(), jobId).run();
+		throw error(500, 'Failed to enqueue refinement');
 	}
 
 	// ── Update parent as superseded ──────────────────────────────

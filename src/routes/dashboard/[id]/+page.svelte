@@ -26,14 +26,30 @@
 	let approving = $state(false);
 
 	const jobId = page.params.id;
+	const IN_PROGRESS_STATUSES = ['queued', 'cloning', 'customizing', 'building', 'deploying'];
 
-	onMount(async () => {
+	async function fetchJob() {
 		try {
 			const res = await fetch(`/api/jobs/${jobId}`);
 			if (!res.ok) throw new Error('Job not found');
 			job = await res.json();
 		} catch { errorMsg = 'Failed to load job.'; }
 		loading = false;
+	}
+
+	onMount(() => {
+		fetchJob();
+
+		// Poll every 3 seconds while the job is in progress
+		const interval = setInterval(async () => {
+			if (job && IN_PROGRESS_STATUSES.includes(job.status)) {
+				await fetchJob();
+			} else if (job && !IN_PROGRESS_STATUSES.includes(job.status)) {
+				clearInterval(interval);
+			}
+		}, 3000);
+
+		return () => clearInterval(interval);
 	});
 
 	let currentStep = $derived(job ? PIPELINE_STAGES.indexOf(job.status as JobStatus) : -1);
