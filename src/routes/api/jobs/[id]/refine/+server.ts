@@ -80,6 +80,7 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 		orchestrator_registry_slug: null,
 		revert_to_commit: null,
 		webhook_url: `${baseUrl}/api/webhooks/pegasus`,
+		deploy_mode: 'pr_only',
 		timestamp: new Date().toISOString()
 	};
 
