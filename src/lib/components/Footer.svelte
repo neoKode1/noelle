@@ -12,7 +12,7 @@
 					Retools
 				</div>
 				<p class="text-sm leading-relaxed">
-					Agentic software retooling. Describe what you need, we build and deploy it.
+					Paste your repo, describe what you want changed. Powered by Cubicube™.
 				</p>
 			</div>
 
@@ -20,9 +20,9 @@
 			<div>
 				<h4 class="text-white font-semibold text-sm mb-3">Product</h4>
 				<ul class="space-y-2 text-sm">
-					<li><a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
-					<li><a href="#use-cases" class="hover:text-white transition-colors">Use Cases</a></li>
-					<li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
+					<li><a href="/#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
+					<li><a href="/retool" class="hover:text-white transition-colors">Retool a Site</a></li>
+					<li><a href="/dashboard" class="hover:text-white transition-colors">Dashboard</a></li>
 				</ul>
 			</div>
 

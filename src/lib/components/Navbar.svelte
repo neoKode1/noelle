@@ -14,15 +14,15 @@
 
 		<!-- Desktop links -->
 		<div class="hidden md:flex items-center gap-8 text-sm font-medium text-surface-600 dark:text-surface-400">
-			<a href="#how-it-works" class="hover:text-brand-600 transition-colors">How It Works</a>
-			<a href="#use-cases" class="hover:text-brand-600 transition-colors">Use Cases</a>
-			<a href="#pricing" class="hover:text-brand-600 transition-colors">Pricing</a>
+			<a href="/#how-it-works" class="hover:text-brand-600 transition-colors">How It Works</a>
+			<a href="/#use-cases" class="hover:text-brand-600 transition-colors">Use Cases</a>
+			<a href="/dashboard" class="hover:text-brand-600 transition-colors">Dashboard</a>
 		</div>
 
 		<!-- CTA -->
 		<div class="hidden md:flex items-center gap-3">
 			<a href="/auth" class="btn-ghost text-sm">Sign In</a>
-			<a href="/intake" class="btn-primary text-sm">Start a Project</a>
+			<a href="/retool" class="btn-primary text-sm">Retool Your Site</a>
 		</div>
 
 		<!-- Mobile toggle -->
@@ -40,12 +40,12 @@
 	<!-- Mobile menu -->
 	{#if mobileOpen}
 		<div class="md:hidden border-t border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-950 p-4 space-y-3">
-			<a href="#how-it-works" class="block text-sm font-medium text-surface-600 dark:text-surface-400" onclick={() => mobileOpen = false}>How It Works</a>
-			<a href="#use-cases" class="block text-sm font-medium text-surface-600 dark:text-surface-400" onclick={() => mobileOpen = false}>Use Cases</a>
-			<a href="#pricing" class="block text-sm font-medium text-surface-600 dark:text-surface-400" onclick={() => mobileOpen = false}>Pricing</a>
+			<a href="/#how-it-works" class="block text-sm font-medium text-surface-600 dark:text-surface-400" onclick={() => mobileOpen = false}>How It Works</a>
+			<a href="/#use-cases" class="block text-sm font-medium text-surface-600 dark:text-surface-400" onclick={() => mobileOpen = false}>Use Cases</a>
+			<a href="/dashboard" class="block text-sm font-medium text-surface-600 dark:text-surface-400" onclick={() => mobileOpen = false}>Dashboard</a>
 			<hr class="border-surface-200 dark:border-surface-800" />
 			<a href="/auth" class="block text-sm font-medium text-surface-600 dark:text-surface-400">Sign In</a>
-			<a href="/intake" class="btn-primary text-sm w-full text-center">Start a Project</a>
+			<a href="/retool" class="btn-primary text-sm w-full text-center">Retool Your Site</a>
 		</div>
 	{/if}
 </nav>
