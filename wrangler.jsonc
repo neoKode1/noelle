@@ -103,7 +103,7 @@
 				{
 					"binding": "DB",
 					"database_name": "retools-db-dev",
-					"database_id": "DEV_DB_ID_PLACEHOLDER",
+					"database_id": "6f1f1028-7690-48f1-8a25-673306c23985",
 					"migrations_dir": "migrations"
 				}
 			],
@@ -127,7 +127,7 @@
 				{
 					"binding": "GITHUB_PAT",
 					"store_id": "7abc511fc4b74147808e542ece047670",
-					"secret_name": "GITHUB_PAT"
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN"
 				},
 				{
 					"binding": "CUBICUBE_BUILDER_QUEUE_WEBHOOK",
@@ -169,7 +169,7 @@
 				{
 					"binding": "DB",
 					"database_name": "retools-db-dev",
-					"database_id": "DEV_DB_ID_PLACEHOLDER",
+					"database_id": "6f1f1028-7690-48f1-8a25-673306c23985",
 					"migrations_dir": "migrations"
 				}
 			],
@@ -193,7 +193,7 @@
 				{
 					"binding": "GITHUB_PAT",
 					"store_id": "7abc511fc4b74147808e542ece047670",
-					"secret_name": "GITHUB_PAT"
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN"
 				},
 				{
 					"binding": "CUBICUBE_BUILDER_QUEUE_WEBHOOK",
@@ -263,7 +263,7 @@
 				{
 					"binding": "GITHUB_PAT",
 					"store_id": "7abc511fc4b74147808e542ece047670",
-					"secret_name": "GITHUB_PAT"
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN"
 				},
 				{
 					"binding": "CUBICUBE_BUILDER_QUEUE_WEBHOOK",
