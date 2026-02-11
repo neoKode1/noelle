@@ -1,0 +1,77 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* ─── Base layer ────────────────────────────────────────── */
+@layer base {
+	body {
+		@apply leading-relaxed;
+	}
+
+	h1, h2, h3, h4, h5, h6 {
+		@apply font-semibold tracking-tight;
+	}
+}
+
+/* ─── Component layer ───────────────────────────────────── */
+@layer components {
+	/* Reusable container */
+	.container-narrow {
+		@apply max-w-3xl mx-auto px-4 sm:px-6;
+	}
+
+	.container-content {
+		@apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+	}
+
+	.container-wide {
+		@apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+	}
+
+	/* Form elements */
+	.form-input {
+		@apply w-full px-3 py-2 border border-surface-300 dark:border-surface-600 rounded-lg;
+		@apply bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100;
+		@apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent;
+		@apply placeholder-surface-400 dark:placeholder-surface-500 transition-colors duration-150;
+	}
+
+	.form-label {
+		@apply block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1;
+	}
+
+	/* Buttons */
+	.btn-primary {
+		@apply inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-medium;
+		@apply bg-brand-600 text-white hover:bg-brand-700;
+		@apply focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+		@apply disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150;
+	}
+
+	.btn-secondary {
+		@apply inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-medium;
+		@apply bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300;
+		@apply hover:bg-surface-200 dark:hover:bg-surface-700;
+		@apply focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-offset-2;
+		@apply disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150;
+	}
+
+	.btn-ghost {
+		@apply inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-medium;
+		@apply text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800;
+		@apply focus:outline-none focus:ring-2 focus:ring-surface-400 focus:ring-offset-2;
+		@apply transition-colors duration-150;
+	}
+
+	/* Cards */
+	.card {
+		@apply bg-white dark:bg-surface-800 border border-surface-200 dark:border-surface-700;
+		@apply rounded-xl p-6 shadow-sm;
+	}
+
+	.card-hover {
+		@apply card hover:shadow-md hover:border-brand-300 dark:hover:border-brand-600;
+		@apply transition-all duration-200;
+	}
+}
+

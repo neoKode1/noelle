@@ -1,0 +1,263 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	/*
+	 * ===================================================================
+	 * RETOOLS — WRANGLER CONFIGURATION
+	 * ===================================================================
+	 *
+	 * Nexartis deployment pipeline: Local → Feature → Dev → Prod
+	 *
+	 * Key Conventions:
+	 * - NO root-level secrets/vars (explicit environments only)
+	 * - Individual secret bindings (not bundled)
+	 * - NPX wrangler commands for version consistency
+	 * - Project domain configuration in package.json
+	 */
+	// ===================================================================
+	// WORKER CONFIGURATION
+	// ===================================================================
+	"name": "retools",
+	"account_id": "80b6115de50fb9c334e34502dcab401d",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-02-11",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	// Static Assets Configuration
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	// Observability & Analytics
+	"observability": {
+		"enabled": true,
+		"traces": {
+			"enabled": true,
+			"destinations": [
+				"axiom-traces"
+			],
+			"head_sampling_rate": 0.25
+		},
+		"logs": {
+			"enabled": true,
+			"destinations": [
+				"axiom-logs"
+			],
+			"head_sampling_rate": 1.0
+		}
+	},
+	"upload_source_maps": true,
+	// ===================================================================
+	// DEPLOYMENT ENVIRONMENTS
+	// ===================================================================
+	"env": {
+		// ===================================================================
+		// 🏠 LOCAL ENVIRONMENT
+		// ===================================================================
+		// Used by: pnpm run deploy, pnpm run deploy:local
+		// Target: Developer's personal wrangler dev configuration
+		// Purpose: Local development and testing
+		"local": {
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "retools-db-local",
+					"database_id": "LOCAL_DB_ID_PLACEHOLDER",
+					"migrations_dir": "migrations"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "ASSETS_BUCKET",
+					"bucket_name": "retools-assets-local"
+				}
+			],
+			// Cloudflare Workers AI for agentic scoping
+			"ai": {
+				"binding": "AI"
+			},
+			"vars": {
+				"ENVIRONMENT": "local",
+				"NODE_ENV": "development",
+				"CONTACT_EMAIL_TO": "dev@nexartis.com",
+				"FROM_EMAIL": "noreply@retools.dev",
+				"VITE_BASE_URL": "http://localhost:5173",
+				"LOG_LEVEL": "debug",
+				"LOG_ENABLE_CONSOLE": "true",
+				"LOG_ENABLE_CLOUDFLARE": "false",
+				"LOG_ENABLE_STRUCTURED": "false",
+				"LOG_ENABLE_ANALYTICS_ENGINE": "false"
+			}
+		},
+		// ===================================================================
+		// ⚡ FEATURE ENVIRONMENT
+		// ===================================================================
+		// Used by: pnpm run deploy:feature
+		// Target: retools--{branch-name}.retools.dev
+		// Purpose: Feature branch testing with custom domain
+		// Note: Routes added dynamically via CLI during deployment
+		"feature": {
+			// Keep worker enabled after deployment
+			"workers_dev": true,
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "retools-db-dev",
+					"database_id": "DEV_DB_ID_PLACEHOLDER",
+					"migrations_dir": "migrations"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "ASSETS_BUCKET",
+					"bucket_name": "retools-assets-dev"
+				}
+			],
+			"secrets_store_secrets": [
+				{
+					"binding": "ANTHROPIC_API_KEY",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "ANTHROPIC_API_KEY"
+				},
+				{
+					"binding": "RESEND_API_KEY",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "RESEND_API_KEY"
+				}
+			],
+			// Cloudflare Workers AI for agentic scoping
+			"ai": {
+				"binding": "AI"
+			},
+			"vars": {
+				"ENVIRONMENT": "feature",
+				"NODE_ENV": "development",
+				"CONTACT_EMAIL_TO": "dev@nexartis.com",
+				"FROM_EMAIL": "noreply@retools.dev",
+				// VITE_BASE_URL: Set dynamically via --var in deploy:feature script
+				"LOG_LEVEL": "info",
+				"LOG_ENABLE_CONSOLE": "true",
+				"LOG_ENABLE_CLOUDFLARE": "true",
+				"LOG_ENABLE_STRUCTURED": "true",
+				"LOG_ENABLE_ANALYTICS_ENGINE": "true"
+			}
+		},
+		// ===================================================================
+		// 🧪 DEVELOPMENT ENVIRONMENT
+		// ===================================================================
+		// Used by: pnpm run deploy:dev
+		// Target: dev.retools.dev
+		// Purpose: Integration testing and development staging
+		"dev": {
+			"routes": [
+				{
+					"pattern": "dev.retools.dev",
+					"custom_domain": true
+				}
+			],
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "retools-db-dev",
+					"database_id": "DEV_DB_ID_PLACEHOLDER",
+					"migrations_dir": "migrations"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "ASSETS_BUCKET",
+					"bucket_name": "retools-assets-dev"
+				}
+			],
+			"secrets_store_secrets": [
+				{
+					"binding": "ANTHROPIC_API_KEY",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "ANTHROPIC_API_KEY"
+				},
+				{
+					"binding": "RESEND_API_KEY",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "RESEND_API_KEY"
+				}
+			],
+			// Cloudflare Workers AI for agentic scoping
+			"ai": {
+				"binding": "AI"
+			},
+			"vars": {
+				"ENVIRONMENT": "development",
+				"NODE_ENV": "development",
+				"CONTACT_EMAIL_TO": "dev@nexartis.com",
+				"FROM_EMAIL": "noreply@dev.retools.dev",
+				"VITE_BASE_URL": "https://dev.retools.dev",
+				"LOG_LEVEL": "info",
+				"LOG_ENABLE_CONSOLE": "true",
+				"LOG_ENABLE_CLOUDFLARE": "true",
+				"LOG_ENABLE_STRUCTURED": "true",
+				"LOG_ENABLE_ANALYTICS_ENGINE": "true"
+			}
+		},
+		// ===================================================================
+		// 🚀 PRODUCTION ENVIRONMENT
+		// ===================================================================
+		// Used by: pnpm run deploy:prod
+		// Target: retools.dev & www.retools.dev
+		// Purpose: Live production environment
+		"prod": {
+			"routes": [
+				{
+					"pattern": "retools.dev",
+					"custom_domain": true
+				},
+				{
+					"pattern": "www.retools.dev",
+					"custom_domain": true
+				}
+			],
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "retools-db-prod",
+					"database_id": "PROD_DB_ID_PLACEHOLDER",
+					"migrations_dir": "migrations"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "ASSETS_BUCKET",
+					"bucket_name": "retools-assets-prod"
+				}
+			],
+			"secrets_store_secrets": [
+				{
+					"binding": "ANTHROPIC_API_KEY",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "ANTHROPIC_API_KEY"
+				},
+				{
+					"binding": "RESEND_API_KEY",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "RESEND_API_KEY"
+				}
+			],
+			// Cloudflare Workers AI for agentic scoping
+			"ai": {
+				"binding": "AI"
+			},
+			"vars": {
+				"ENVIRONMENT": "production",
+				"NODE_ENV": "production",
+				"CONTACT_EMAIL_TO": "info@nexartis.com",
+				"FROM_EMAIL": "noreply@retools.dev",
+				"VITE_BASE_URL": "https://retools.dev",
+				"LOG_LEVEL": "warn",
+				"LOG_ENABLE_CONSOLE": "false",
+				"LOG_ENABLE_CLOUDFLARE": "true",
+				"LOG_ENABLE_STRUCTURED": "true",
+				"LOG_ENABLE_ANALYTICS_ENGINE": "true"
+			}
+		}
+	}
+}
+
