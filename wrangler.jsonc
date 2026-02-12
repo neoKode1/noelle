@@ -99,11 +99,20 @@
 		"feature": {
 			// Keep worker enabled after deployment
 			"workers_dev": true,
+			// Queue producer binding for Pegasus deployment system
+			"queues": {
+				"producers": [
+					{
+						"queue": "cubicube-builder-queue-dev",
+						"binding": "BUILDER_QUEUE"
+					}
+				]
+			},
 			"d1_databases": [
 				{
 					"binding": "DB",
 					"database_name": "retools-db-dev",
-					"database_id": "DEV_DB_ID_PLACEHOLDER",
+					"database_id": "6f1f1028-7690-48f1-8a25-673306c23985",
 					"migrations_dir": "migrations"
 				}
 			],
@@ -123,9 +132,19 @@
 					"binding": "RESEND_API_KEY",
 					"store_id": "7abc511fc4b74147808e542ece047670",
 					"secret_name": "RESEND_API_KEY"
+				},
+				{
+					"binding": "GITHUB_PAT",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN"
+				},
+				{
+					"binding": "CUBICUBE_BUILDER_QUEUE_WEBHOOK",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_WEBHOOK"
 				}
 			],
-			// Cloudflare Workers AI for agentic scoping
+			// Cloudflare Workers AI
 			"ai": {
 				"binding": "AI"
 			},
@@ -134,7 +153,7 @@
 				"NODE_ENV": "development",
 				"CONTACT_EMAIL_TO": "dev@nexartis.com",
 				"FROM_EMAIL": "noreply@retools.dev",
-				// VITE_BASE_URL: Set dynamically via --var in deploy:feature script
+				"VITE_BASE_URL": "https://retools-feature.nexartis.workers.dev",
 				"LOG_LEVEL": "info",
 				"LOG_ENABLE_CONSOLE": "true",
 				"LOG_ENABLE_CLOUDFLARE": "true",
@@ -155,11 +174,20 @@
 					"custom_domain": true
 				}
 			],
+			// Queue producer binding for Pegasus deployment system
+			"queues": {
+				"producers": [
+					{
+						"queue": "cubicube-builder-queue-dev",
+						"binding": "BUILDER_QUEUE"
+					}
+				]
+			},
 			"d1_databases": [
 				{
 					"binding": "DB",
 					"database_name": "retools-db-dev",
-					"database_id": "DEV_DB_ID_PLACEHOLDER",
+					"database_id": "6f1f1028-7690-48f1-8a25-673306c23985",
 					"migrations_dir": "migrations"
 				}
 			],
@@ -179,9 +207,19 @@
 					"binding": "RESEND_API_KEY",
 					"store_id": "7abc511fc4b74147808e542ece047670",
 					"secret_name": "RESEND_API_KEY"
+				},
+				{
+					"binding": "GITHUB_PAT",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN"
+				},
+				{
+					"binding": "CUBICUBE_BUILDER_QUEUE_WEBHOOK",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_WEBHOOK"
 				}
 			],
-			// Cloudflare Workers AI for agentic scoping
+			// Cloudflare Workers AI
 			"ai": {
 				"binding": "AI"
 			},
@@ -215,6 +253,15 @@
 					"custom_domain": true
 				}
 			],
+			// Queue producer binding for Pegasus deployment system
+			"queues": {
+				"producers": [
+					{
+						"queue": "cubicube-builder-queue-prod",
+						"binding": "BUILDER_QUEUE"
+					}
+				]
+			},
 			"d1_databases": [
 				{
 					"binding": "DB",
@@ -239,9 +286,19 @@
 					"binding": "RESEND_API_KEY",
 					"store_id": "7abc511fc4b74147808e542ece047670",
 					"secret_name": "RESEND_API_KEY"
+				},
+				{
+					"binding": "GITHUB_PAT",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN"
+				},
+				{
+					"binding": "CUBICUBE_BUILDER_QUEUE_WEBHOOK",
+					"store_id": "7abc511fc4b74147808e542ece047670",
+					"secret_name": "CUBICUBE_BUILDER_QUEUE_WEBHOOK"
 				}
 			],
-			// Cloudflare Workers AI for agentic scoping
+			// Cloudflare Workers AI
 			"ai": {
 				"binding": "AI"
 			},

@@ -9,7 +9,7 @@ declare global {
 				id: string;
 				email: string;
 				name?: string | null;
-				companyName?: string | null;
+				githubUsername?: string | null;
 			} | null;
 		}
 		// interface PageData {}
@@ -28,7 +28,13 @@ declare global {
 				// Secrets Store Bindings
 				ANTHROPIC_API_KEY: { get: () => Promise<string> };
 				RESEND_API_KEY: { get: () => Promise<string> };
-				// Cloudflare Workers AI for agentic scoping
+				// GitHub PAT for dispatching Pegasus workflow
+				GITHUB_PAT: { get: () => Promise<string> };
+				// HMAC secret for verifying Pegasus webhook callbacks
+				CUBICUBE_BUILDER_QUEUE_WEBHOOK: { get: () => Promise<string> };
+				// Builder queue for Pegasus deployment pipeline
+				BUILDER_QUEUE: Queue;
+				// Cloudflare Workers AI
 				AI?: Ai;
 				// Logging configuration
 				LOG_LEVEL?: string;
