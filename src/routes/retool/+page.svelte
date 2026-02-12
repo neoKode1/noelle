@@ -101,7 +101,7 @@
 						disabled={submitting}
 						autocomplete="off"
 					/>
-					<p class="text-xs text-surface-400 mt-1">A PAT with <code class="text-xs">repo</code> scope. Used to push a branch and open a PR on your behalf. Never stored.</p>
+					<p class="text-xs text-surface-400 mt-1">Your token should have the <code class="text-xs font-semibold">repo</code> scope checked. We use it to push a branch and open a PR — nothing else. Never stored. <a href="https://github.com/settings/tokens/new?scopes=repo&description=Retools" target="_blank" rel="noopener noreferrer" class="text-brand-400 hover:text-brand-300 underline underline-offset-2">Create a token →</a></p>
 				</div>
 
 				<!-- Prompt -->
