@@ -170,7 +170,7 @@
 		"dev": {
 			"routes": [
 				{
-					"pattern": "dev.retools.dev",
+					"pattern": "retools.streamcube.link",
 					"custom_domain": true
 				}
 			],
@@ -227,8 +227,8 @@
 				"ENVIRONMENT": "development",
 				"NODE_ENV": "development",
 				"CONTACT_EMAIL_TO": "dev@nexartis.com",
-				"FROM_EMAIL": "noreply@dev.retools.dev",
-				"VITE_BASE_URL": "https://dev.retools.dev",
+				"FROM_EMAIL": "noreply@retools.streamcube.link",
+				"VITE_BASE_URL": "https://retools.streamcube.link",
 				"LOG_LEVEL": "info",
 				"LOG_ENABLE_CONSOLE": "true",
 				"LOG_ENABLE_CLOUDFLARE": "true",
