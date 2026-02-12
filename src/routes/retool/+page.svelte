@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import { Github, Send, Loader2, ArrowRight, AlertCircle } from 'lucide-svelte';
+	import { Github, Send, Loader2, ArrowRight, AlertCircle, KeyRound } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { EMPTY_RETOOL_FORM, type RetoolFormData } from '$lib/types/retool';
 
@@ -12,6 +12,7 @@
 	async function handleSubmit() {
 		errorMsg = '';
 		if (!form.repoUrl.trim()) { errorMsg = 'GitHub repo URL is required.'; return; }
+		if (!form.github_token.trim()) { errorMsg = 'GitHub token is required.'; return; }
 		if (!form.prompt.trim()) { errorMsg = 'Describe what you want changed.'; return; }
 
 		submitting = true;
@@ -50,7 +51,7 @@
 				Retool Your Site
 			</h1>
 			<p class="mt-3 text-surface-500 dark:text-surface-400 max-w-lg mx-auto">
-				Paste your GitHub repo, describe what you want changed, and we'll build a preview you can approve or refine.
+				Paste your GitHub repo, describe what you want changed, and we'll open a PR with the results.
 			</p>
 		</div>
 
@@ -84,6 +85,23 @@
 						bind:value={form.branch}
 						disabled={submitting}
 					/>
+				</div>
+
+				<!-- GitHub Token -->
+				<div class="mb-5">
+					<label for="github_token" class="form-label flex items-center gap-1.5">
+						<KeyRound class="w-4 h-4" /> GitHub Personal Access Token
+					</label>
+					<input
+						id="github_token"
+						type="password"
+						class="form-input font-mono"
+						placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+						bind:value={form.github_token}
+						disabled={submitting}
+						autocomplete="off"
+					/>
+					<p class="text-xs text-surface-400 mt-1">A PAT with <code class="text-xs">repo</code> scope. Used to push a branch and open a PR on your behalf. Never stored.</p>
 				</div>
 
 				<!-- Prompt -->
@@ -131,11 +149,11 @@
 					</div>
 					<div>
 						<div class="text-2xl mb-1">2</div>
-						<p>AI builds a preview</p>
+						<p>AI builds your changes</p>
 					</div>
 					<div>
 						<div class="text-2xl mb-1">3</div>
-						<p>Approve or refine</p>
+						<p>PR lands in your repo</p>
 					</div>
 				</div>
 			</div>

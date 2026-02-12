@@ -37,12 +37,14 @@ export interface RetoolFormData {
 	repoUrl: string;
 	branch: string;
 	prompt: string;
+	github_token: string;
 }
 
 export const EMPTY_RETOOL_FORM: RetoolFormData = {
 	repoUrl: '',
 	branch: 'main',
-	prompt: ''
+	prompt: '',
+	github_token: ''
 };
 
 /** Status display config for UI badges and icons. */
