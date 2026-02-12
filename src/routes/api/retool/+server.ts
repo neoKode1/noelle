@@ -16,14 +16,37 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	if (!env?.DB) throw error(503, 'Database not available');
 
 	const body = await request.json();
-	const { repoUrl, branch = 'main', prompt } = body;
+	const { repoUrl, branch = 'main', prompt, github_token: githubToken } = body;
 
 	// ── Validate inputs ──────────────────────────────────────────
 	if (!repoUrl || typeof repoUrl !== 'string') throw error(400, 'repoUrl is required');
 	if (!prompt || typeof prompt !== 'string') throw error(400, 'prompt is required');
+	if (!githubToken || typeof githubToken !== 'string') throw error(400, 'github_token is required');
 
 	const parsed = parseGitHubUrl(repoUrl);
 	if (!parsed) throw error(400, 'Invalid GitHub URL. Expected: https://github.com/owner/repo');
+
+	// ── Validate GitHub token has repo access ────────────────────
+	try {
+		const repoCheck = await fetch(
+			`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`,
+			{
+				headers: {
+					Authorization: `token ${githubToken}`,
+					Accept: 'application/vnd.github.v3+json',
+					'User-Agent': 'Retools-API'
+				}
+			}
+		);
+		if (repoCheck.status === 401) throw error(401, 'Invalid GitHub token');
+		if (repoCheck.status === 403) throw error(403, 'GitHub token lacks repo access');
+		if (repoCheck.status === 404) throw error(404, 'Repository not found or token lacks access');
+		if (!repoCheck.ok) throw error(502, `GitHub API error: ${repoCheck.status}`);
+	} catch (e: unknown) {
+		// Re-throw SvelteKit errors (from our throw error() calls above)
+		if (e && typeof e === 'object' && 'status' in e) throw e;
+		throw error(502, 'Failed to validate GitHub token');
+	}
 
 	// ── Check queue availability ─────────────────────────────────
 	const queue = env.BUILDER_QUEUE;
@@ -75,6 +98,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		revert_to_commit: null,
 		webhook_url: `${baseUrl}/api/webhooks/pegasus`,
 		deploy_mode: 'pr_only',
+		github_token: githubToken,
 		timestamp: new Date().toISOString()
 	};
 
