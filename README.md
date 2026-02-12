@@ -1,8 +1,8 @@
 # Retools
 
-> **Prompt-driven retooling platform — paste a repo, describe changes, get a preview.**
+> **Prompt-driven retooling platform — paste a repo, describe changes, get a PR.**
 
-Retools is the UX layer on top of the Cubicube™ / Pegasus build engine. Developers paste a GitHub repo URL, describe what they want changed in plain English, and Retools dispatches the Pegasus AI pipeline to clone, modify, build, and deploy a preview. No infrastructure setup required.
+Retools is the UX layer on top of the Cubicube™ / Pegasus build engine. Developers (or agents) paste a GitHub repo URL, provide their own GitHub token, describe what they want changed in plain English, and Retools enqueues the job into the Cubicube builder queue. The queue consumer dispatches the Pegasus AI pipeline to clone, modify, build, push a branch, and create a pull request — all scoped to the repos the user's token can access.
 
 **© 2026 Nexartis, LLC. All rights reserved.**
 
@@ -11,27 +11,29 @@ Retools is the UX layer on top of the Cubicube™ / Pegasus build engine. Develo
 ## How It Works
 
 ```
-Developer pastes GitHub repo URL + describes changes
+Developer/Agent provides GitHub repo URL + prompt + GitHub PAT
   ↓
-Retools creates a retool job (D1) and dispatches Pegasus workflow
+Retools validates token, creates job (D1), enqueues DeploymentMessage v8
   ↓
-Pegasus clones repo → AI applies changes → builds → deploys preview
+Cubicube Builder Queue consumer picks up message → dispatches Pegasus workflow
   ↓
-Preview at *.cubicubes.ai → developer approves or refines
+Pegasus clones repo → AI applies changes → quality gate → build
   ↓
-Approved → deploy to production domain
+Pegasus pushes branch + creates PR on the user's repo (using their token)
+  ↓
+Webhook callback updates job status in real-time
 ```
 
-Retools is **purely additive** — it doesn't modify Cubicube, the builder queue, or Pegasus. It's a new consumer of the existing pipeline via GitHub Actions `workflow_dispatch`.
+Retools is **purely additive** — it sends `deploy_mode: pr_only` messages to the existing Cubicube builder queue. The queue consumer and Pegasus handle the rest.
 
 ---
 
 ## 🚀 Features
 
 - **Prompt-Driven Interface** — Paste a repo URL + type what you want changed. That's it.
-- **Live Pipeline Tracker** — Real-time status: Queued → Cloning → AI Customizing → Building → Deploying → Preview Ready
-- **Preview Deploys** — Changes deploy to `*.cubicubes.ai` sandbox URLs for review before going live
-- **Approve / Refine Loop** — Accept changes or refine your prompt for another iteration
+- **User-Provided GitHub Token** — Callers supply their own PAT, scoping access to repos they own. Works for humans and agents alike.
+- **PR-Only Mode** — Retools creates a branch and pull request instead of deploying to a live URL. Review changes before merging.
+- **Live Pipeline Tracker** — Real-time status: Queued → Cloning → AI Customizing → Building → Pushing → PR Created
 - **Webhook Integration** — HMAC-verified callbacks from Pegasus update job status in real-time
 - **Powered by Pegasus** — Leverages the full Cubicube AI build pipeline without any infrastructure changes
 
@@ -40,34 +42,34 @@ Retools is **purely additive** — it doesn't modify Cubicube, the builder queue
 ## 🏗️ Architecture
 
 ```
-┌──────────────────────┐       workflow_dispatch        ┌──────────────────────────┐
-│  Retools (this repo) │  ─────────────────────────────▶│  Pegasus HB (GitHub Actions) │
-│  SvelteKit + CF D1   │                                │  clone → AI → build → deploy │
-│                      │◀─────────────────────────────  │                              │
-│  /api/retool         │       HMAC webhook callback    │  deploy-worker.yml           │
-│  /api/webhooks/pegasus│                               └──────────────────────────┘
-└──────────────────────┘                                           │
-         │                                                         ▼
-         │                                              ┌──────────────────────┐
-         ▼                                              │  *.cubicubes.ai      │
-┌──────────────────────┐                                │  Preview deployment  │
-│  Dashboard UI        │                                └──────────────────────┘
-│  Status pipeline     │
-│  Approve / Refine    │
-└──────────────────────┘
+┌──────────────────────┐   DeploymentMessage v8   ┌────────────────────────────┐
+│  Retools (this repo) │  ──── CF Queue ────────▶ │  Cubicube Builder Queue    │
+│  SvelteKit + CF D1   │                          │  (queue consumer worker)   │
+│                      │                          │                            │
+│  /api/retool         │                          │  Validates message,        │
+│  /api/webhooks/pegasus│                         │  triggers workflow_dispatch │
+└──────────────────────┘                          └────────────┬───────────────┘
+         ▲                                                     │
+         │                                                     ▼
+         │  HMAC webhook callback              ┌──────────────────────────────┐
+         └─────────────────────────────────────│  Pegasus HB (GitHub Actions) │
+                                               │  clone → AI → build → push  │
+                                               │  → create PR (user token)   │
+                                               │  deploy-worker.yml          │
+                                               └──────────────────────────────┘
 ```
 
 ### Integration Contract
 
-Retools calls the **same** `workflow_dispatch` API that `cubicube_builder_queue` uses:
+Retools enqueues a **DeploymentMessage v8** onto the Cubicube builder queue (Cloudflare Queue):
 
 | Field | Value |
 |---|---|
-| Workflow | `deploy-worker.yml` in `Nexartis/pegasus-horizon-breakthrough` |
-| `deployment_payload.schema_version` | `8` |
-| `deployment_payload.is_real_domain` | `false` (preview) / `true` (production) |
-| `deployment_payload.ai_mode` | `pegasus_hb` |
-| `deployment_payload.dispatch_namespace` | `retools-dispatch-namespace` |
+| Queue | `cubicube-builder-queue-dev` (dev/feature) · `cubicube-builder-queue-prod` (prod) |
+| `schema_version` | `8` |
+| `deploy_mode` | `pr_only` — push branch + create PR, skip deploy/verify/archive |
+| `ai_mode` | `pegasus_hb` |
+| `github_token` | User-provided PAT (encrypted in transit, never logged) |
 | Webhook callback | `POST /api/webhooks/pegasus` with HMAC signature |
 
 ---
@@ -78,6 +80,7 @@ Retools calls the **same** `workflow_dispatch` API that `cubicube_builder_queue`
 |---|---|
 | **SvelteKit 5** | Full-stack framework with Svelte 5 runes |
 | **Cloudflare Workers** | Edge deployment |
+| **Cloudflare Queues** | DeploymentMessage delivery to builder queue |
 | **Cloudflare D1** | SQLite database (`retool_jobs`, `users`, `job_events`) |
 | **Cloudflare R2** | Asset storage |
 | **Tailwind CSS** | Utility-first styling |
@@ -90,7 +93,7 @@ Retools calls the **same** `workflow_dispatch` API that `cubicube_builder_queue`
 
 | Method | Path | Purpose |
 |---|---|---|
-| `POST` | `/api/retool` | Create retool job + dispatch Pegasus workflow |
+| `POST` | `/api/retool` | Validate token, create job, enqueue to builder queue |
 | `GET` | `/api/jobs/[id]` | Get job status and details |
 | `POST` | `/api/jobs/[id]/approve` | Approve preview → deploy to production |
 | `POST` | `/api/jobs/[id]/refine` | Submit refined prompt for another iteration |
@@ -102,9 +105,12 @@ Retools calls the **same** `workflow_dispatch` API that `cubicube_builder_queue`
 {
   "repoUrl": "https://github.com/user/my-site",
   "branch": "main",
-  "prompt": "Make the hero section darker and add a pricing page with three tiers"
+  "prompt": "Make the hero section darker and add a pricing page with three tiers",
+  "github_token": "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 }
 ```
+
+The `github_token` is **required**. It must be a GitHub PAT with `repo` scope that has access to the target repository. Retools validates the token against the GitHub API before accepting the job.
 
 Returns `201` with `{ id, deploymentId, status: "queued" }`.
 
@@ -191,10 +197,29 @@ Deployed via `feature` environment using D1 database `retools-db-dev` (`6f1f1028
 
 | Binding | Secret Name | Purpose |
 |---|---|---|
-| `GITHUB_PAT` | `CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN` | GitHub PAT for workflow_dispatch |
+| `GITHUB_PAT` | `CUBICUBE_BUILDER_QUEUE_GITHUB_PAT_TOKEN` | GitHub PAT (queue consumer dispatch — not used for push) |
 | `CUBICUBE_BUILDER_QUEUE_WEBHOOK` | `CUBICUBE_BUILDER_QUEUE_WEBHOOK` | HMAC key for webhook verification |
 | `ANTHROPIC_API_KEY` | `ANTHROPIC_API_KEY` | Claude AI (future) |
 | `RESEND_API_KEY` | `RESEND_API_KEY` | Transactional email (future) |
+
+---
+
+## 🔐 Security — User-Provided GitHub Token
+
+Retools requires callers to supply their own GitHub PAT. This design:
+
+- **Proves authorization** — only tokens with `repo` scope on the target repo are accepted
+- **Works for humans AND agents** — any caller with a valid PAT can submit a job
+- **Scopes access** — Pegasus can only push to repos the token authorizes
+
+### Token lifecycle
+
+1. **Validated at ingestion** — Retools checks the token against GitHub API (`GET /repos/:owner/:repo`) before accepting the job
+2. **Passed through queue** — Token travels inside the DeploymentMessage, encrypted in transit via Cloudflare Queues
+3. **Sanitized from logs** — Builder queue strips `github_token` before logging; Pegasus masks via `::add-mask::`
+4. **Written to temp file** — Pegasus writes the token to `/tmp/pegasus_user_github_token.txt` (never to `GITHUB_OUTPUT`)
+5. **Used for push + PR** — Git remote is reconfigured with the user token; PR is created under the token owner's identity
+6. **Cleaned up** — Temp file is deleted in an `always()` step, regardless of pipeline outcome
 
 ---
 
@@ -204,6 +229,7 @@ Deployed via `feature` environment using D1 database `retools-db-dev` (`6f1f1028
 pnpm dev                # Start development server
 pnpm build              # Build for production
 pnpm check              # Run svelte-check type validation
+pnpm run deploy:feature # Deploy feature branch
 pnpm run deploy:dev     # Deploy to dev
 pnpm run deploy:prod    # Deploy to production
 pnpm run db:generate    # Generate Drizzle migrations
@@ -217,8 +243,8 @@ pnpm run cf-typegen     # Generate Cloudflare types
 | Repository | Role |
 |---|---|
 | [cubicube-com](https://github.com/Nexartis/cubicube-com) | Cubicube platform (Retools does NOT modify this) |
-| [pegasus-horizon-breakthrough](https://github.com/Nexartis/pegasus-horizon-breakthrough) | AI build pipeline (Retools dispatches workflows here) |
-| [cubicube_builder_queue](https://github.com/Nexartis/cubicube_builder_queue) | Queue consumer (Retools bypasses this, dispatches directly) |
+| [pegasus-horizon-breakthrough](https://github.com/Nexartis/pegasus-horizon-breakthrough) | AI build pipeline — Pegasus executes clone → AI → build → push → PR |
+| [cubicube_builder_queue](https://github.com/Nexartis/cubicube_builder_queue) | Queue consumer — receives DeploymentMessage from Retools and dispatches Pegasus |
 
 ---
 
