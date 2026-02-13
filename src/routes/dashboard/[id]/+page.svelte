@@ -4,12 +4,10 @@
 	import {
 		ArrowLeft,
 		CheckCircle2,
-		ExternalLink,
 		Github,
 		GitBranch,
 		Loader2,
 		RefreshCcw,
-		Rocket,
 		AlertTriangle,
 		Send
 	} from 'lucide-svelte';
@@ -23,7 +21,7 @@
 	let errorMsg = $state('');
 	let refinePrompt = $state('');
 	let refining = $state(false);
-	let approving = $state(false);
+
 
 	const jobId = page.params.id;
 	const IN_PROGRESS_STATUSES = ['queued', 'cloning', 'customizing', 'building', 'deploying'];
@@ -53,18 +51,6 @@
 	});
 
 	let currentStep = $derived(job ? PIPELINE_STAGES.indexOf(job.status as JobStatus) : -1);
-
-	async function handleApprove() {
-		if (!job) return;
-		approving = true;
-		try {
-			const res = await fetch(`/api/jobs/${job.id}/approve`, { method: 'POST' });
-			if (!res.ok) throw new Error('Approve failed');
-			const data = await res.json();
-			job = { ...job, status: data.status, productionUrl: data.productionUrl };
-		} catch { errorMsg = 'Failed to approve.'; }
-		approving = false;
-	}
 
 	async function handleRefine() {
 		if (!job || !refinePrompt.trim()) return;
@@ -129,8 +115,8 @@
 				</div>
 				<div class="flex gap-2">
 					{#if job.previewUrl}
-						<a href={job.previewUrl} target="_blank" rel="noopener noreferrer" class="btn-secondary gap-1 text-sm">
-							<ExternalLink class="w-4 h-4" /> Preview
+						<a href={job.previewUrl} target="_blank" rel="noopener noreferrer" class="btn-primary gap-1 text-sm">
+							<Github class="w-4 h-4" /> View PR
 						</a>
 					{/if}
 					{#if job.githubRunUrl}
@@ -198,22 +184,20 @@
 
 				<!-- Right: Actions -->
 				<div class="lg:col-span-2 space-y-6">
-					<!-- Approve -->
+					<!-- PR Ready -->
 					{#if job.status === 'preview_ready'}
 						<div class="card border-emerald-300 dark:border-emerald-700">
 							<h2 class="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-1.5">
-								<Rocket class="w-4 h-4" /> Preview is ready
+								<CheckCircle2 class="w-4 h-4" /> Your PR is ready
 							</h2>
 							<p class="text-sm text-surface-600 dark:text-surface-400 mb-4">
-								Review the preview above. Approve to deploy to production, or refine with a new prompt.
+								We've pushed a branch with the AI changes and opened a pull request on your repo. Review the PR, then merge and deploy through your own pipeline.
 							</p>
-							<button class="btn-primary gap-1" onclick={handleApprove} disabled={approving}>
-								{#if approving}
-									<Loader2 class="w-4 h-4 animate-spin" /> Approving…
-								{:else}
-									<Rocket class="w-4 h-4" /> Approve &amp; Deploy
-								{/if}
-							</button>
+							{#if job.previewUrl}
+								<a href={job.previewUrl} target="_blank" rel="noopener noreferrer" class="btn-primary gap-1 inline-flex">
+									<Github class="w-4 h-4" /> View Pull Request
+								</a>
+							{/if}
 						</div>
 					{/if}
 
@@ -248,7 +232,7 @@
 							<Loader2 class="w-10 h-10 text-brand-500 mx-auto mb-4 animate-spin" />
 							<h2 class="text-lg font-semibold text-surface-900 dark:text-white mb-2">Build in progress</h2>
 							<p class="text-sm text-surface-500 dark:text-surface-400">
-								Your site is being retooled. This page will update when the preview is ready.
+								Your repo is being retooled. This page will update when the PR is ready.
 							</p>
 						</div>
 					{/if}

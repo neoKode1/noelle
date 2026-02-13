@@ -4,7 +4,6 @@
 	import {
 		FolderKanban,
 		Plus,
-		ExternalLink,
 		ChevronRight,
 		Github,
 		GitBranch,
@@ -119,7 +118,7 @@
 								</div>
 								{#if job.previewUrl}
 									<a href={job.previewUrl} target="_blank" rel="noopener noreferrer" class="btn-ghost text-xs px-2 py-1 gap-0.5" onclick={(e) => e.stopPropagation()}>
-										<ExternalLink class="w-3 h-3" /> Preview
+										<Github class="w-3 h-3" /> View PR
 									</a>
 								{/if}
 								<ChevronRight class="w-5 h-5 text-surface-400" />

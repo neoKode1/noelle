@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	if (!env?.DB) throw error(503, 'Database not available');
 
 	const body = await request.json();
-	const { repoUrl, branch = 'main', prompt, github_token: githubToken } = body;
+	const { repoUrl, branch, prompt, github_token: githubToken } = body;
 
 	// ── Validate inputs ──────────────────────────────────────────
 	if (!repoUrl || typeof repoUrl !== 'string') throw error(400, 'repoUrl is required');
@@ -26,7 +26,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const parsed = parseGitHubUrl(repoUrl);
 	if (!parsed) throw error(400, 'Invalid GitHub URL. Expected: https://github.com/owner/repo');
 
-	// ── Validate GitHub token has repo access ────────────────────
+	// ── Validate GitHub token has repo access + detect default branch ─
+	let resolvedBranch = typeof branch === 'string' && branch ? branch : '';
 	try {
 		const repoCheck = await fetch(
 			`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`,
@@ -42,11 +43,20 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		if (repoCheck.status === 403) throw error(403, 'GitHub token lacks repo access');
 		if (repoCheck.status === 404) throw error(404, 'Repository not found or token lacks access');
 		if (!repoCheck.ok) throw error(502, `GitHub API error: ${repoCheck.status}`);
+
+		// Auto-detect default branch when the caller didn't specify one
+		if (!resolvedBranch) {
+			const repoData = await repoCheck.json();
+			resolvedBranch = repoData.default_branch || 'main';
+		}
 	} catch (e: unknown) {
 		// Re-throw SvelteKit errors (from our throw error() calls above)
 		if (e && typeof e === 'object' && 'status' in e) throw e;
 		throw error(502, 'Failed to validate GitHub token');
 	}
+
+	// Final fallback (should never happen, but safety net)
+	if (!resolvedBranch) resolvedBranch = 'main';
 
 	// ── Check queue availability ─────────────────────────────────
 	const queue = env.BUILDER_QUEUE;
@@ -63,7 +73,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		`INSERT INTO retool_jobs (id, user_id, github_owner, github_repo, branch, prompt, status, deployment_id, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?)`
 	)
-		.bind(jobId, 'anonymous', parsed.owner, parsed.repo, branch, prompt, deploymentId, now, now)
+		.bind(jobId, 'anonymous', parsed.owner, parsed.repo, resolvedBranch, prompt, deploymentId, now, now)
 		.run();
 
 	// ── Build DeploymentMessage v8 for builder queue ─────────────
@@ -89,7 +99,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		},
 		template_repo_owner: parsed.owner,
 		template_repo_name: parsed.repo,
-		template_repo_ref: branch,
+		template_repo_ref: resolvedBranch,
 		addon_cubes: [],
 		custom_cube_repo_url: null,
 		ai_prompt: prompt,
