@@ -23,9 +23,14 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 		throw error(409, `Job is "${row.status}", not "preview_ready". Cannot approve.`);
 	}
 
-	// ── Parse optional production domain from request body ────────
-	let body: { domain?: string } = {};
+	// ── Parse request body ───────────────────────────────────────
+	let body: { domain?: string; github_token?: string } = {};
 	try { body = await request.json(); } catch { /* empty body OK */ }
+
+	const githubToken = body.github_token;
+	if (!githubToken || typeof githubToken !== 'string') {
+		throw error(400, 'github_token is required for production deploys');
+	}
 
 	const prodDomain = body.domain || (row.production_url as string) || `${row.github_repo}-${(row.id as string).slice(0, 8)}.cubicubes.ai`;
 	const isRealDomain = !!body.domain; // Only real if user supplied a domain
@@ -67,7 +72,8 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 		orchestrator_registry_slug: null,
 		revert_to_commit: null,
 		webhook_url: `${baseUrl}/api/webhooks/pegasus`,
-		deploy_mode: 'pr_only',
+		deploy_mode: 'full',
+		github_token: githubToken,
 		timestamp: new Date().toISOString()
 	};
 
