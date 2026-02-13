@@ -20,6 +20,7 @@
 	let loading = $state(true);
 	let errorMsg = $state('');
 	let refinePrompt = $state('');
+	let refineToken = $state('');
 	let refining = $state(false);
 
 
@@ -53,19 +54,24 @@
 	let currentStep = $derived(job ? PIPELINE_STAGES.indexOf(job.status as JobStatus) : -1);
 
 	async function handleRefine() {
-		if (!job || !refinePrompt.trim()) return;
+		if (!job || !refinePrompt.trim() || !refineToken.trim()) return;
 		refining = true;
+		errorMsg = '';
 		try {
 			const res = await fetch(`/api/jobs/${job.id}/refine`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prompt: refinePrompt })
+				body: JSON.stringify({ prompt: refinePrompt, github_token: refineToken })
 			});
-			if (!res.ok) throw new Error('Refine failed');
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				errorMsg = data.message || 'Refine failed';
+				return;
+			}
 			const data = await res.json();
 			goto(`/dashboard/${data.id}`);
 		} catch { errorMsg = 'Failed to submit refinement.'; }
-		refining = false;
+		finally { refining = false; }
 	}
 </script>
 
@@ -208,7 +214,7 @@
 								<RefreshCcw class="w-4 h-4 text-brand-500" /> Refine
 							</h2>
 							<p class="text-sm text-surface-500 dark:text-surface-400 mb-3">
-								Submit a new prompt to create a refined version.
+								Submit a new prompt to create a refined version. Your GitHub token is required again to push the new changes.
 							</p>
 							<textarea
 								class="form-input min-h-[100px] mb-3"
@@ -216,7 +222,16 @@
 								bind:value={refinePrompt}
 								disabled={refining}
 							></textarea>
-							<button class="btn-secondary gap-1" onclick={handleRefine} disabled={refining || !refinePrompt.trim()}>
+							<label class="form-label" for="refine-token">GitHub Token</label>
+							<input
+								id="refine-token"
+								type="password"
+								class="form-input mb-3"
+								placeholder="ghp_xxxxxxxxxxxx"
+								bind:value={refineToken}
+								disabled={refining}
+							/>
+							<button class="btn-secondary gap-1" onclick={handleRefine} disabled={refining || !refinePrompt.trim() || !refineToken.trim()}>
 								{#if refining}
 									<Loader2 class="w-4 h-4 animate-spin" /> Submitting…
 								{:else}

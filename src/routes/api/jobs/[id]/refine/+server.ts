@@ -22,8 +22,9 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 	if (!parentRow) throw error(404, 'Parent job not found');
 
 	const body = await request.json();
-	const { prompt } = body;
+	const { prompt, github_token: githubToken } = body;
 	if (!prompt || typeof prompt !== 'string') throw error(400, 'prompt is required');
+	if (!githubToken || typeof githubToken !== 'string') throw error(400, 'github_token is required for refinements');
 
 	// ── Create child job ─────────────────────────────────────────
 	const jobId = crypto.randomUUID().replace(/-/g, '').slice(0, 21);
@@ -81,6 +82,7 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 		revert_to_commit: null,
 		webhook_url: `${baseUrl}/api/webhooks/pegasus`,
 		deploy_mode: 'pr_only',
+		github_token: githubToken,
 		timestamp: new Date().toISOString()
 	};
 
