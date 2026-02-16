@@ -1,61 +1,32 @@
 /**
  * POST /api/webhooks/pegasus
  *
- * Receives HMAC-signed webhook callbacks from the Pegasus deployment pipeline.
- * Updates the corresponding retool_jobs row with status, preview URL, AI summary, etc.
+ * Receives HMAC-signed webhook callbacks from the Pegasus Retools Engine.
+ * Updates the corresponding retool_jobs row with status, PR URL, GitHub run details, etc.
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-/** Map Pegasus webhook statuses → retool_jobs status. */
-function mapStatus(pegasusStatus: string): string | null {
-	switch (pegasusStatus) {
-		case 'phase_update':
-			return null; // handled per-phase below
-		case 'ai_result':
-			return 'customizing';
-		case 'repairing':
-			return 'customizing'; // still in AI phase
-		case 'deployment_live':
-			return 'preview_ready';
-		case 'completed':
-			return 'preview_ready';
-		case 'failed':
-			return 'failed';
-		default:
-			return null;
-	}
-}
+/**
+ * Valid pipeline statuses sent by pegasus-retools-engine workflow.
+ * These match the UI pipeline tracker exactly.
+ */
+const VALID_STATUSES = new Set([
+	'queued',
+	'cloning',
+	'customizing',
+	'building',
+	'deploying',
+	'preview_ready',
+	'failed'
+]);
 
-/** Map phase_name from Pegasus to our job status. */
-function mapPhase(phaseName: string): string | null {
-	switch (phaseName) {
-		case 'clone':
-			return 'cloning';
-		case 'install':
-			return 'building';
-		case 'ai_customize':
-			return 'customizing';
-		case 'build':
-			return 'building';
-		case 'deploy':
-			return 'deploying';
-		case 'verify':
-			return 'deploying';
-		default:
-			return null;
-	}
-}
-
-/** Verify HMAC-SHA256 signature (same pattern as cubicube-com). */
+/** Verify HMAC-SHA256 signature. */
 async function verifySignature(
-	request: Request,
 	body: string,
+	signature: string,
 	secret: string
-): Promise<boolean> {
-	const signature = request.headers.get('x-webhook-signature');
-	if (!signature) return false;
-
+): Promise<{ valid: boolean; expected: string }> {
 	const encoder = new TextEncoder();
 	const key = await crypto.subtle.importKey(
 		'raw',
@@ -71,12 +42,12 @@ async function verifySignature(
 		.join('');
 
 	// Constant-time comparison
-	if (signature.length !== expected.length) return false;
+	if (signature.length !== expected.length) return { valid: false, expected };
 	let mismatch = 0;
 	for (let i = 0; i < signature.length; i++) {
 		mismatch |= signature.charCodeAt(i) ^ expected.charCodeAt(i);
 	}
-	return mismatch === 0;
+	return { valid: mismatch === 0, expected };
 }
 
 export const POST: RequestHandler = async ({ request, platform }) => {
@@ -85,41 +56,69 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	// ── Read + verify ────────────────────────────────────────────
 	const rawBody = await request.text();
-	const webhookSecret = await env.CUBICUBE_BUILDER_QUEUE_WEBHOOK?.get();
+	const receivedSig = request.headers.get('x-webhook-signature') ?? '';
+
+	// Resolve the secret from Cloudflare Secrets Store (requires .get() call)
+	let webhookSecret: string;
+	try {
+		webhookSecret = (await env.RETOOLS_WEBHOOK_SECRET.get()).trim();
+	} catch (err) {
+		console.error('[Webhook] Failed to resolve RETOOLS_WEBHOOK_SECRET:', err);
+		return json({ error: 'Webhook secret not configured' }, { status: 500 });
+	}
+
 	if (!webhookSecret) return json({ error: 'Webhook secret not configured' }, { status: 500 });
 
-	const valid = await verifySignature(request, rawBody, webhookSecret);
-	if (!valid) return json({ error: 'Invalid signature' }, { status: 401 });
+	console.log('[Webhook] Secret type:', typeof webhookSecret);
+	console.log('[Webhook] Secret length:', webhookSecret.length);
+	console.log('[Webhook] Secret (first 8):', webhookSecret.substring(0, 8));
+	console.log('[Webhook] Received sig:', receivedSig.substring(0, 16) + '...');
+	console.log('[Webhook] Body length:', rawBody.length);
+
+	if (!receivedSig) {
+		console.log('[Webhook] No signature header');
+		return json({ error: 'Missing signature' }, { status: 401 });
+	}
+
+	const { valid, expected } = await verifySignature(rawBody, receivedSig, webhookSecret);
+
+	if (!valid) {
+		console.log('[Webhook] Signature MISMATCH');
+		console.log('[Webhook] Expected sig:', expected.substring(0, 16) + '...');
+		console.log('[Webhook] Received sig:', receivedSig.substring(0, 16) + '...');
+		return json({ error: 'Invalid signature' }, { status: 401 });
+	}
+
+	console.log('[Webhook] Signature verified ✅');
 
 	// ── Parse payload ────────────────────────────────────────────
 	const payload = JSON.parse(rawBody);
-	const { deployment_id, status: pegasusStatus } = payload;
-	if (!deployment_id || !pegasusStatus) {
-		return json({ error: 'Missing deployment_id or status' }, { status: 400 });
+	const { job_id, status: pegasusStatus } = payload;
+	if (!job_id || !pegasusStatus) {
+		return json({ error: 'Missing job_id or status' }, { status: 400 });
 	}
+
+	console.log(`[Webhook] Job ${job_id} → status: ${pegasusStatus}`);
 
 	const now = Date.now();
-
-	// ── Determine new job status ─────────────────────────────────
-	let newStatus: string | null = null;
-	if (pegasusStatus === 'phase_update' && payload.phase_name) {
-		newStatus = mapPhase(payload.phase_name);
-	} else {
-		newStatus = mapStatus(pegasusStatus);
-	}
 
 	// ── Build SET clauses ────────────────────────────────────────
 	const sets: string[] = ['updated_at = ?'];
 	const binds: unknown[] = [now];
 
-	if (newStatus) {
+	// Update status if it's a valid pipeline status
+	if (VALID_STATUSES.has(pegasusStatus)) {
 		sets.push('status = ?');
-		binds.push(newStatus);
+		binds.push(pegasusStatus);
 	}
-	if (payload.worker_url) {
+
+	// PR URL (when preview_ready)
+	if (payload.pr_url) {
 		sets.push('preview_url = ?');
-		binds.push(payload.worker_url);
+		binds.push(payload.pr_url);
 	}
+
+	// GitHub run details
 	if (payload.github_run_id) {
 		sets.push('github_run_id = ?');
 		binds.push(String(payload.github_run_id));
@@ -128,23 +127,28 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		sets.push('github_run_url = ?');
 		binds.push(payload.github_run_url);
 	}
-	if (payload.ai_summary) {
-		sets.push('ai_summary = ?');
-		binds.push(payload.ai_summary);
-	}
-	if (payload.error_message) {
+
+	// Error message (when failed)
+	if (payload.message && pegasusStatus === 'failed') {
 		sets.push('error_message = ?');
-		binds.push(payload.error_message);
+		binds.push(payload.message);
+	}
+
+	// Mark as completed when PR is ready or deploying is done
+	if (pegasusStatus === 'preview_ready') {
+		sets.push('completed_at = ?');
+		binds.push(now);
 	}
 
 	// ── Update DB ────────────────────────────────────────────────
-	binds.push(deployment_id);
+	binds.push(job_id);
 	await env.DB.prepare(
-		`UPDATE retool_jobs SET ${sets.join(', ')} WHERE deployment_id = ?`
+		`UPDATE retool_jobs SET ${sets.join(', ')} WHERE id = ?`
 	)
 		.bind(...binds)
 		.run();
 
+	console.log(`[Webhook] DB updated for job ${job_id}`);
 	return json({ ok: true });
 };
 

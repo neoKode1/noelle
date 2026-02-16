@@ -25,17 +25,10 @@ declare global {
 				DB: D1Database;
 				// R2 Asset Storage
 				ASSETS_BUCKET: R2Bucket;
-				// Secrets Store Bindings
-				ANTHROPIC_API_KEY: { get: () => Promise<string> };
-				RESEND_API_KEY: { get: () => Promise<string> };
-				// GitHub PAT for dispatching Pegasus workflow
-				GITHUB_PAT: { get: () => Promise<string> };
-				// HMAC secret for verifying Pegasus webhook callbacks
-				CUBICUBE_BUILDER_QUEUE_WEBHOOK: { get: () => Promise<string> };
-				// Builder queue for Pegasus deployment pipeline
+				// HMAC secret for verifying Pegasus Retools Engine webhook callbacks (Secrets Store binding)
+				RETOOLS_WEBHOOK_SECRET: { get: () => Promise<string> };
+				// Builder queue for Retools PR generation pipeline
 				BUILDER_QUEUE: Queue;
-				// Cloudflare Workers AI
-				AI?: Ai;
 				// Logging configuration
 				LOG_LEVEL?: string;
 				LOG_ENABLE_CONSOLE?: string;
