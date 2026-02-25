@@ -1,51 +1,47 @@
-<script lang="ts">
-	import { Wrench } from 'lucide-svelte';
-</script>
-
-<footer class="bg-surface-900 dark:bg-surface-950 text-surface-400 border-t border-surface-800">
-	<div class="container-wide py-12">
-		<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+<footer class="border-t border-white/5 bg-[#020203] py-12 text-sm">
+	<div class="container-wide">
+		<div class="flex flex-col md:flex-row justify-between gap-8 mb-12">
 			<!-- Brand -->
-			<div class="md:col-span-1">
-				<div class="flex items-center gap-2 text-white font-bold text-lg mb-3">
-					<Wrench class="w-5 h-5 text-brand-400" />
-					Retools
+			<div class="max-w-xs">
+				<div class="flex items-center gap-2 mb-4">
+					<div class="w-5 h-5 rounded bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white text-[9px] font-bold">R</div>
+					<span class="text-white font-medium tracking-tight uppercase">Retools</span>
 				</div>
-				<p class="text-sm leading-relaxed">
-					Paste your repo, describe what you want changed. Powered by Cubicube™.
+				<p class="text-slate-500 text-xs leading-relaxed">
+					Paste your repo, describe what you want changed. AI builds the PR — you review & merge.
 				</p>
 			</div>
 
-			<!-- Product -->
-			<div>
-				<h4 class="text-white font-semibold text-sm mb-3">Product</h4>
-				<ul class="space-y-2 text-sm">
-					<li><a href="/#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
-					<li><a href="/retool" class="hover:text-white transition-colors">Retool a Site</a></li>
-					<li><a href="/dashboard" class="hover:text-white transition-colors">Dashboard</a></li>
-				</ul>
-			</div>
-
-			<!-- Company -->
-			<div>
-				<h4 class="text-white font-semibold text-sm mb-3">Company</h4>
-				<ul class="space-y-2 text-sm">
-					<li><a href="/legal/privacy" class="hover:text-white transition-colors">Privacy</a></li>
-					<li><a href="/legal/terms" class="hover:text-white transition-colors">Terms</a></li>
-				</ul>
-			</div>
-
-			<!-- Contact -->
-			<div>
-				<h4 class="text-white font-semibold text-sm mb-3">Contact</h4>
-				<ul class="space-y-2 text-sm">
-					<li><a href="mailto:hello@retools.dev" class="hover:text-white transition-colors">hello@retools.dev</a></li>
-				</ul>
+			<!-- Links -->
+			<div class="flex gap-12 flex-wrap">
+				<div>
+					<h4 class="text-white font-medium mb-4 text-xs uppercase tracking-wider">Product</h4>
+					<ul class="space-y-2 text-slate-500 text-xs">
+						<li><a href="/#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
+						<li><a href="/#use-cases" class="hover:text-white transition-colors">Use Cases</a></li>
+						<li><a href="/retool" class="hover:text-white transition-colors">Retool a Site</a></li>
+						<li><a href="/dashboard" class="hover:text-white transition-colors">Dashboard</a></li>
+					</ul>
+				</div>
+				<div>
+					<h4 class="text-white font-medium mb-4 text-xs uppercase tracking-wider">Legal</h4>
+					<ul class="space-y-2 text-slate-500 text-xs">
+						<li><a href="/legal/privacy" class="hover:text-white transition-colors">Privacy</a></li>
+						<li><a href="/legal/terms" class="hover:text-white transition-colors">Terms</a></li>
+					</ul>
+				</div>
+				<div>
+					<h4 class="text-white font-medium mb-4 text-xs uppercase tracking-wider">Contact</h4>
+					<ul class="space-y-2 text-slate-500 text-xs">
+						<li><a href="mailto:hello@retools.dev" class="hover:text-white transition-colors">hello@retools.dev</a></li>
+					</ul>
+				</div>
 			</div>
 		</div>
 
-		<div class="mt-10 pt-6 border-t border-surface-800 text-center text-xs text-surface-500">
-			&copy; {new Date().getFullYear()} Retools. All rights reserved.
+		<div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+			<p class="text-slate-600 text-xs">&copy; {new Date().getFullYear()} Retools. All rights reserved.</p>
+			<p class="text-slate-600 text-xs">Powered by Cubicube™</p>
 		</div>
 	</div>
 </footer>

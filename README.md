@@ -253,12 +253,21 @@ pnpm run cf-typegen     # Generate Cloudflare types
 
 ## 🔧 Developer Notes
 
-### Current State (2026-02-12)
+### Current State (2026-02-15)
 
-- **Active Branch**: `feature/token-input-field` (contains all Retools UI + API changes)
-- **Deployed Version**: `f14ccc32` on `retools.streamcube.link`
-- **Default Branch**: `prod`
-- **Recent Changes**:
+- **Active Branch**: `main` (fully functional end-to-end pipeline)
+- **Deployed Version**: Latest on `retools.streamcube.link`
+- **Default Branch**: `main`
+- **Recent Changes** (2026-02-15):
+  - ✅ **Complete end-to-end pipeline working** — Job submission → AI changes → Build validation → PR creation
+  - ✅ **AI Auto-Fix Build Loop** — Up to 3 AI attempts to fix build errors before failing
+  - ✅ **Comprehensive webhook coverage** — All 6 pipeline stages send real-time status updates
+  - ✅ **Fixed webhook statuses** — All statuses now match UI exactly (`cloning`, `customizing`, `building`, `deploying`, `preview_ready`)
+  - ✅ **HMAC webhook signature validation** — Properly awaiting Secrets Store Promise
+  - ✅ **Claude 4.5 integration** — Using `claude-sonnet-4-5-20250929` model
+  - ✅ **Dual AI modes** — Normal mode for initial changes, fix mode for debugging build errors
+  - ✅ **Mandatory build validation** — PRs only created when build succeeds
+- **Previous Changes** (2026-02-12):
   - Auto-detect default branch from GitHub API instead of hardcoding `main` (commit `84ab00f`)
   - GitHub token input field added to retool form UI
   - Health check endpoint (`/api/health`)
@@ -296,30 +305,43 @@ The user's GitHub token (passed in the DeploymentMessage) is used for both repo 
 | Token validation via GitHub API | ✅ Working |
 | Job creation + D1 persistence | ✅ Working |
 | Queue dispatch to builder queue | ✅ Working |
-| Builder queue routing to `pegasus-hb2-retools` | ✅ Working |
+| Builder queue routing to `pegasus-retools-engine` | ✅ Working |
 | User token checkout in Pegasus | ✅ Working |
 | Framework-agnostic AI prompts | ✅ Working |
+| AI auto-fix build loop (up to 3 attempts) | ✅ Working |
+| Build validation (mandatory) | ✅ Working |
 | Branch push with user token | ✅ Working |
 | PR creation with user token | ✅ Working |
-| Default branch auto-detection | ✅ Deployed, pending re-test |
+| Real-time webhook status updates | ✅ Working |
+| Default branch auto-detection | ✅ Working |
 
 ### Tested Repos
 
 | Repo | Framework | Default Branch | Result |
 |---|---|---|---|
 | `neoKode1/varylite` | SvelteKit | `main` | ✅ Full E2E success — PR created, Vercel built cleanly |
+| `neoKode1/CEO-AI` | Next.js | `master` | ✅ Full E2E success — AI changes applied, build validated, branch pushed |
 
-### Pending Tests
+### AI Auto-Fix Build Loop
 
-- `neoKode1/CEO-AI` (Python, default branch: `master`) — re-test needed after auto-detect branch fix
-- React / Next.js repo — verify framework-agnostic prompts preserve non-SvelteKit frameworks
-- Vue / Nuxt repo — same as above
+The workflow now includes intelligent build validation with AI self-correction:
+
+1. **Initial Build Attempt** — After AI applies changes, the project is built
+2. **Auto-Fix Loop** — If build fails, AI analyzes the error and attempts to fix it (up to 3 times)
+3. **Fix Mode** — AI uses a specialized debugging prompt focused on minimal fixes
+4. **Success or Fail** — PR is only created if build succeeds; job fails after 3 unsuccessful fix attempts
+
+This prevents broken PRs from being created and ensures all AI-generated code builds successfully.
 
 ### Known Issues (Resolved)
 
 1. **Git credential helper override** — `actions/checkout@v4` cached the Pegasus PAT, preventing user token push. Fixed by unsetting `http.https://github.com/.extraheader`.
-2. **Framework translation** — AI was hardcoded to translate everything to SvelteKit. Fixed with framework-agnostic prompts in `pegasus-hb2-retools`.
+2. **Framework translation** — AI was hardcoded to translate everything to SvelteKit. Fixed with framework-agnostic prompts in `pegasus-retools-engine`.
 3. **Default branch hardcoded to `main`** — Repos using `master` or other default branches failed at checkout. Fixed by auto-detecting from GitHub API response.
+4. **Webhook signature validation** — Secrets Store binding returns a Promise. Fixed by awaiting: `await env.RETOOLS_WEBHOOK_SECRET`.
+5. **Invalid webhook statuses** — Using `cloning_complete` and `build_complete` which don't exist in UI. Fixed to use exact UI statuses.
+6. **Claude API model** — Multiple model names tried (404 errors). Fixed by using `claude-sonnet-4-5-20250929` (Claude 4.5).
+7. **JSON parsing in workflow** — Using `echo` with JSON caused shell interpretation errors. Fixed by using heredoc syntax.
 
 ---
 
