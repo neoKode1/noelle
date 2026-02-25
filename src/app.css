@@ -4,8 +4,12 @@
 
 /* ─── Base layer ────────────────────────────────────────── */
 @layer base {
+	html {
+		background-color: #030304;
+	}
 	body {
-		@apply leading-relaxed bg-[#030304] text-slate-400 antialiased overflow-x-hidden;
+		@apply leading-relaxed text-slate-400 antialiased overflow-x-hidden;
+		background-color: #030304;
 		font-family: 'Inter', system-ui, -apple-system, sans-serif;
 	}
 
