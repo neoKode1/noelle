@@ -1,0 +1,909 @@
+<html lang="de" class="scroll-smooth"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Novara Pro AI - Entfessle die Macht der Künstlichen Intelligenz</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Inter', sans-serif; }
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #050505; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #444; }
+.glass-panel {
+background: rgba(255, 255, 255, 0.03);
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.text-gradient {
+background: linear-gradient(to right, #e2e8f0, #94a3b8);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.title-gradient {
+background: linear-gradient(135deg, #FFFFFF 0%, #a5b4fc 100%);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+.hero-glow {
+background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+}
+/* Scroll Reveal Animation */
+.reveal {
+opacity: 0;
+transform: translateY(30px) scale(0.98);
+transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+filter: blur(10px);
+}
+.reveal.active {
+opacity: 1;
+transform: translateY(0) scale(1);
+filter: blur(0);
+}
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+/* Modal Animation */
+#demo-modal { transition: opacity 0.3s ease, visibility 0.3s ease; }
+#demo-modal.hidden-modal { opacity: 0; visibility: hidden; pointer-events: none; }
+#demo-modal.visible-modal { opacity: 1; visibility: visible; pointer-events: auto; }
+#modal-content { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+#demo-modal.hidden-modal #modal-content { transform: scale(0.95) translateY(10px); }
+#demo-modal.visible-modal #modal-content { transform: scale(1) translateY(0); }
+/* Details/Summary Animation */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+</style>
+<style>
+/* 3D Transform utilities */
+.rotate-x-0 { --tw-rotate-x: 0deg; transform: translate3d(var(--tw-translate-x, 0), var(--tw-translate-y, 0), var(--tw-translate-z, 0)) rotateX(var(--tw-rotate-x, 0)) rotateY(var(--tw-rotate-y, 0)) rotateZ(var(--tw-rotate-z, 0)) skewX(var(--tw-skew-x, 0)) skewY(var(--tw-skew-y, 0)) scaleX(var(--tw-scale-x, 1)) scaleY(var(--tw-scale-y, 1)) !important; }
+</style>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+}
+},
+plugins: [
+function({ addUtilities }) {
+addUtilities({
+'.rotate-x-12': { transform: 'perspective(1000px) rotateX(12deg)' },
+'.rotate-x-0': { transform: 'perspective(1000px) rotateX(0deg)' }
+});
+}
+]
+};
+</script></head>
+<body class="bg-[#030304] text-slate-400 antialiased selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden">
+
+<!-- Background (component) added by Aura -->
+<div class="aura-background-component fixed top-0 w-full h-screen -z-10" data-alpha-mask="80" style="; mask-image: linear-gradient(to bottom, transparent, black 0%, black 80%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 0%, black 80%, transparent)"><div class="aura-background-component top-0 w-full -z-10 absolute h-full">
+  <div data-us-project="ILgOO23w4wEyPQOKyLO4" class="absolute w-full h-full left-0 top-0 -z-10"></div>
+  <script type="text/javascript">
+    !function(){if(!window.UnicornStudio){window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js",i.onload=function(){window.UnicornStudio.isInitialized||(UnicornStudio.init(),window.UnicornStudio.isInitialized=!0)},(document.head || document.body).appendChild(i)}}();
+  </script>
+</div></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-[#030304]/80 backdrop-blur-md transition-all duration-300 reveal active">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2 group">
+                <div class="w-6 h-6 rounded bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-semibold tracking-tighter">N</div>
+                <span class="text-white font-medium tracking-tight text-sm group-hover:opacity-80 transition-opacity uppercase">Novara Pro AI</span>
+            </a>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+                <a href="#services" class="hover:text-white transition-colors">Lösungen</a>
+                <a href="#about" class="hover:text-white transition-colors">Über Uns</a>
+                <a href="#usecases" class="hover:text-white transition-colors">Use Cases</a>
+                <a href="#pricing" class="hover:text-white transition-colors">Preise</a>
+                <a href="#contact" class="hover:text-white transition-colors">Kontakt</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button onclick="toggleModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-full transition-all duration-300 shadow-lg shadow-indigo-500/20">
+                    Termin buchen
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-12 md:pt-48 md:pb-24 overflow-hidden">
+        <!-- Background Glow -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] hero-glow pointer-events-none opacity-60"></div>
+
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+            <div class="flex flex-col items-center text-center max-w-4xl mx-auto">
+                <div class="reveal inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-[11px] font-medium mb-8">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                    </span>
+                    Zukunft der Automatisierung
+                </div>
+                
+                <h1 class="reveal delay-100 text-5xl md:text-7xl font-medium tracking-tight text-white mb-6 leading-[1.1] title-gradient">
+                    Entfessle die Macht der<br>Künstlichen Intelligenz
+                </h1>
+                
+                <p class="reveal delay-200 text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed font-light">
+                    Von Grenzen zu Möglichkeiten mit KI-Mitarbeitern für Vertrieb, Marketing &amp; Support.
+                </p>
+                
+                <div class="reveal delay-300 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                    <button onclick="toggleModal()" class="w-full sm:w-auto group relative px-8 py-3.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-slate-100 transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
+                        Jetzt deinen KI-Blueprint sichern
+                        <iconify-icon icon="solar:arrow-right-linear" width="16" class="inline ml-1 group-hover:translate-x-0.5 transition-transform"></iconify-icon>
+                    </button>
+                    <span class="text-xs text-indigo-400 font-medium animate-pulse">2 Spots Verfügbar</span>
+                </div>
+
+                <!-- Trust / Ratings -->
+                <div class="mt-12 reveal delay-300 flex items-center gap-2 bg-white/5 border border-white/5 rounded-full px-4 py-1.5">
+                    <div class="flex text-yellow-400 gap-0.5">
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                    </div>
+                    <span class="text-xs text-slate-300">4.9/5 Sternen von über <span class="text-white font-medium">112 Kunden</span></span>
+                </div>
+            </div>
+
+            <!-- Abstract AI Automation Flow Visual -->
+            <div class="mt-20 relative perspective-[2000px] group reveal delay-300">
+                <div class="relative w-full max-w-5xl mx-auto glass-panel rounded-xl p-1 shadow-2xl transition-transform duration-700 ease-out transform rotate-x-12 group-hover:rotate-x-0 overflow-hidden border-t border-white/10">
+                    <div class="bg-[#0A0A0C] rounded-lg overflow-hidden border border-white/5 h-[450px] md:h-[550px] relative">
+                        
+                        <!-- Grid Background -->
+                        <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 z-0"></div>
+                        
+                        <!-- Flow Diagram Visual -->
+                        <div class="absolute inset-0 z-10 p-8 flex flex-col justify-center items-center">
+                            
+                            <!-- Top Node: Traffic Source -->
+                            <div class="flex gap-12 mb-12">
+                                <div class="glass-panel px-4 py-2 rounded-lg flex items-center gap-2 border-dashed border-white/20">
+                                    <iconify-icon icon="solar:phone-calling-linear" class="text-blue-400" width="16"></iconify-icon>
+                                    <span class="text-xs text-slate-300">Anruf</span>
+                                </div>
+                                <div class="glass-panel px-4 py-2 rounded-lg flex items-center gap-2 border-dashed border-white/20">
+                                    <iconify-icon icon="solar:chat-line-linear" class="text-pink-400" width="16"></iconify-icon>
+                                    <span class="text-xs text-slate-300">Web Anfrage</span>
+                                </div>
+                            </div>
+
+                            <!-- Connecting Lines -->
+                            <div class="h-8 w-[1px] bg-gradient-to-b from-white/20 to-indigo-500/50 -mt-12 mb-2"></div>
+
+                            <!-- Central System Node -->
+                            <div class="relative z-20 w-full max-w-2xl bg-[#0F0F11] border border-white/10 rounded-xl p-6 shadow-2xl">
+                                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-indigo-600 rounded-full text-[10px] text-white border border-indigo-400 font-medium tracking-wide shadow-lg shadow-indigo-500/30">NOVARA PRO AI CORE</div>
+                                
+                                <div class="grid grid-cols-3 gap-4 mt-2">
+                                    <!-- Component 1: Lead Capture -->
+                                    <div class="bg-white/5 rounded-lg p-3 border border-white/5">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-[10px] text-slate-400 uppercase tracking-wider">Eingehend</span>
+                                            <span class="text-[10px] text-emerald-400">Live</span>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex items-center gap-2 p-1.5 rounded bg-white/5">
+                                                <div class="w-4 h-4 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-[8px]">K</div>
+                                                <div class="h-1.5 w-12 bg-white/10 rounded"></div>
+                                            </div>
+                                            <div class="flex items-center gap-2 p-1.5 rounded bg-white/5">
+                                                <div class="w-4 h-4 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[8px]">M</div>
+                                                <div class="h-1.5 w-16 bg-white/10 rounded"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Component 2: AI Automation -->
+                                    <div class="bg-white/5 rounded-lg p-3 border border-white/5 flex flex-col items-center justify-center relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-indigo-500/5 z-0"></div>
+                                        <div class="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center mb-2 animate-pulse">
+                                            <iconify-icon icon="solar:cpu-bolt-linear" class="text-indigo-400" width="18"></iconify-icon>
+                                        </div>
+                                        <span class="text-[10px] text-indigo-200 text-center relative z-10">Analyse &amp; Aktion</span>
+                                        <div class="mt-2 w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                                            <div class="w-2/3 h-full bg-indigo-500"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Component 3: CRM -->
+                                    <div class="bg-white/5 rounded-lg p-3 border border-white/5">
+                                        <div class="flex items-center gap-1 mb-3">
+                                            <iconify-icon icon="solar:calendar-mark-linear" class="text-green-400" width="12"></iconify-icon>
+                                            <span class="text-[10px] text-slate-400">Terminierung</span>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-end">
+                                                <div class="bg-green-500/20 text-green-100 px-2 py-1 rounded-t-lg rounded-bl-lg text-[9px]">Termin bestätigt</div>
+                                            </div>
+                                            <div class="flex justify-start">
+                                                <div class="bg-white/10 text-slate-300 px-2 py-1 rounded-t-lg rounded-br-lg text-[9px] border border-white/5">Sync CRM...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Connecting Lines Down -->
+                            <div class="h-8 w-[1px] bg-gradient-to-b from-indigo-500/50 to-white/20 mt-2"></div>
+
+                            <!-- Bottom Result -->
+                            <div class="glass-panel px-6 py-3 rounded-full flex items-center gap-3 border border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]">
+                                <span class="flex h-2 w-2 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                <span class="text-xs font-medium text-emerald-300">Wachstum automatisiert</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- Reflection/Shadow -->
+                <div class="absolute -bottom-10 left-0 right-0 h-20 bg-gradient-to-t from-[#030304] to-transparent z-20"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="py-24 border-y border-white/5 bg-white/[0.01]">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row gap-16 items-start">
+                <div class="flex-1 reveal">
+                    <h2 class="text-3xl md:text-4xl font-medium text-white mb-6 tracking-tight">Herausforderungen <br><span class="text-red-400/80">die dein Wachstum bremsen</span></h2>
+                    <p class="text-slate-400 text-lg mb-8 leading-relaxed">
+                        Die Realität in vielen Unternehmen: Manuelle Prozesse und Fachkräftemangel verhindern Skalierung.
+                    </p>
+                </div>
+                
+                <div class="flex-1 w-full grid gap-4 reveal delay-100">
+                    <div class="glass-panel p-4 rounded-lg flex items-center gap-4 group hover:bg-white/5 transition-colors">
+                        <div class="w-10 h-10 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                            <iconify-icon icon="solar:users-group-two-rounded-linear" class="text-red-400" width="22"></iconify-icon>
+                        </div>
+                        <div>
+                            <h3 class="text-white text-sm font-medium">Fachkräftemangel</h3>
+                            <p class="text-slate-500 text-xs mt-1">Qualifizierte Mitarbeiter sind schwer zu finden. Zentrale Wachstumsbremse.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel p-4 rounded-lg flex items-center gap-4 group hover:bg-white/5 transition-colors">
+                        <div class="w-10 h-10 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                            <iconify-icon icon="solar:phone-calling-rounded-linear" class="text-red-400" width="22"></iconify-icon>
+                        </div>
+                        <div>
+                            <h3 class="text-white text-sm font-medium">Überlastete Telefone &amp; Support</h3>
+                            <p class="text-slate-500 text-xs mt-1">Kundenanfragen bleiben liegen, Chancen gehen verloren.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-4 rounded-lg flex items-center gap-4 group hover:bg-white/5 transition-colors">
+                        <div class="w-10 h-10 rounded bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                            <iconify-icon icon="solar:clock-circle-linear" class="text-red-400" width="22"></iconify-icon>
+                        </div>
+                        <div>
+                            <h3 class="text-white text-sm font-medium">Verlust von Zeit &amp; Effizienz</h3>
+                            <p class="text-slate-500 text-xs mt-1">Manuelle Abläufe bremsen Wachstum und Innovation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-24 bg-[#050507]">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl font-medium text-center text-white mb-16 tracking-tight reveal">Unsere Lösungen</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Voice Agents -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-100 flex flex-col group hover:border-indigo-500/30 transition-colors">
+                    <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-6">
+                        <iconify-icon icon="solar:phone-calling-linear" class="text-indigo-400" width="22"></iconify-icon>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">Voice Agents</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        Nehmen Anrufe entgegen, führen Erstgespräche &amp; buchen Termine automatisch.
+                    </p>
+                </div>
+
+                <!-- Chat Agents -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-100 flex flex-col group hover:border-indigo-500/30 transition-colors">
+                    <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-6">
+                        <iconify-icon icon="solar:chat-round-line-linear" class="text-indigo-400" width="22"></iconify-icon>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">Chat Agents</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        Beantworten Anfragen auf deiner Website, WhatsApp oder Social Media in Sekunden.
+                    </p>
+                </div>
+
+                <!-- CRM-Automatisierung -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-100 flex flex-col group hover:border-indigo-500/30 transition-colors">
+                    <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-6">
+                        <iconify-icon icon="solar:users-group-rounded-linear" class="text-indigo-400" width="22"></iconify-icon>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">CRM-Automatisierung</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        Leads werden automatisch bewertet, priorisiert &amp; nachgefasst.
+                    </p>
+                </div>
+
+                <!-- Recruiting KI -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-200 flex flex-col group hover:border-indigo-500/30 transition-colors">
+                    <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-6">
+                        <iconify-icon icon="solar:user-id-linear" class="text-indigo-400" width="22"></iconify-icon>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">Recruiting KI</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        Bewerber-Screening, Interviews &amp; Follow-up automatisiert.
+                    </p>
+                </div>
+
+                <!-- Industrie-Automatisierung -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-200 flex flex-col group hover:border-indigo-500/30 transition-colors">
+                    <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-6">
+                        <iconify-icon icon="solar:factory-2-linear" class="text-indigo-400" width="22"></iconify-icon>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">Industrie-Automatisierung</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        Von Produktionsplanung bis Datenmanagement effizient gestaltet.
+                    </p>
+                </div>
+
+                <!-- Marketing-Automatisierung -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-200 flex flex-col group hover:border-indigo-500/30 transition-colors">
+                    <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-6">
+                        <iconify-icon icon="solar:megaphone-linear" class="text-indigo-400" width="22"></iconify-icon>
+                    </div>
+                    <h3 class="text-lg font-medium text-white mb-2">Marketing-Automatisierung</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        Erstellt Content, versendet Newsletter &amp; schaltet Kampagnen vollautomatisch.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Benefits -->
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 reveal delay-300">
+                 <div class="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                    <iconify-icon icon="solar:heart-linear" class="text-emerald-400" width="24"></iconify-icon>
+                    <div>
+                        <h4 class="text-white text-sm font-medium">Mitarbeiterfreundlich</h4>
+                        <p class="text-xs text-slate-500">Dein Team wird entlastet, Fokus auf wertvolle Aufgaben.</p>
+                    </div>
+                 </div>
+                 <div class="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                    <iconify-icon icon="solar:shield-check-linear" class="text-emerald-400" width="24"></iconify-icon>
+                    <div>
+                        <h4 class="text-white text-sm font-medium">Fehlerfrei &amp; präzise</h4>
+                        <p class="text-xs text-slate-500">Kein Vergessen, kein Missverständnis.</p>
+                    </div>
+                 </div>
+                 <div class="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                    <iconify-icon icon="solar:globe-linear" class="text-emerald-400" width="24"></iconify-icon>
+                    <div>
+                        <h4 class="text-white text-sm font-medium">Multilingual</h4>
+                        <p class="text-xs text-slate-500">Kundenkommunikation in allen Sprachen.</p>
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 border-y border-white/5 bg-white/[0.01]">
+        <div class="max-w-4xl mx-auto px-6 text-center reveal">
+            <h2 class="text-3xl font-medium text-white mb-8 tracking-tight">Wer wir sind &amp; was uns antreibt</h2>
+            <p class="text-slate-300 text-lg leading-relaxed">
+                Novara Pro AI ist mehr als ein Technologieanbieter – wir sind Architekten einer neuen Business-Ära. Unsere Mission: Unternehmern intelligente Systeme zu geben, die Arbeit erleichtern, Wachstum beschleunigen und Wettbewerbsvorteile sichern. Wir verbinden KI, Automatisierung und Design zu Lösungen, die nicht nur funktionieren, sondern dein Unternehmen sichtbar machen.
+            </p>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="py-24 bg-[#030304]">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl font-medium text-center text-white mb-16 tracking-tight reveal">Das Team hinter Novara Pro AI</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 reveal delay-100">
+                <!-- Team Member 1 -->
+                <div class="glass-panel p-6 rounded-xl text-center group">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-slate-800 mb-4 flex items-center justify-center text-white text-xl border border-white/10">KV</div>
+                    <h4 class="text-white font-medium">Kristiyan Velinov</h4>
+                    <div class="text-xs text-indigo-400 uppercase tracking-wide mb-3">Visionär &amp; Stratege</div>
+                    <p class="text-xs text-slate-500">Verantwortlich für Unternehmensführung, Wachstum und Vertrieb auf höchster Ebene.</p>
+                </div>
+                <!-- Team Member 2 -->
+                <div class="glass-panel p-6 rounded-xl text-center group">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-slate-800 mb-4 flex items-center justify-center text-white text-xl border border-white/10">MA</div>
+                    <h4 class="text-white font-medium">Mario Albrecht</h4>
+                    <div class="text-xs text-indigo-400 uppercase tracking-wide mb-3">Kreativer Kopf</div>
+                    <p class="text-xs text-slate-500">Zuständig für Marketing, Branding, Design und die Entwicklung digitaler Lerninhalte.</p>
+                </div>
+                <!-- Team Member 3 -->
+                <div class="glass-panel p-6 rounded-xl text-center group">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-slate-800 mb-4 flex items-center justify-center text-white text-xl border border-white/10">VS</div>
+                    <h4 class="text-white font-medium">Valentin Schürer</h4>
+                    <div class="text-xs text-indigo-400 uppercase tracking-wide mb-3">Technik-Mind</div>
+                    <p class="text-xs text-slate-500">Leitet Automatisierungen, Prozesse und sorgt für effiziente Strukturen.</p>
+                </div>
+                <!-- Team Member 4 -->
+                <div class="glass-panel p-6 rounded-xl text-center group">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-slate-800 mb-4 flex items-center justify-center text-white text-xl border border-white/10">AÜ</div>
+                    <h4 class="text-white font-medium">Ali Ünal</h4>
+                    <div class="text-xs text-indigo-400 uppercase tracking-wide mb-3">Sales-Leader</div>
+                    <p class="text-xs text-slate-500">Entwickelt Vertriebsstrategien, akquiriert Kunden und skaliert den Vertrieb &amp; Marketing.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section id="usecases" class="py-24 border-t border-white/5 bg-white/[0.01]">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl font-medium text-white mb-12 tracking-tight reveal">So setzen Unternehmen unsere KI ein</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Case 1 -->
+                <div class="group reveal delay-100 glass-panel p-6 rounded-xl hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-3 mb-4">
+                        <iconify-icon icon="solar:scissors-square-linear" class="text-indigo-400" width="24"></iconify-icon>
+                        <h3 class="text-white font-medium">Friseursalons &amp; Studios</h3>
+                    </div>
+                    <p class="text-slate-400 text-sm">Kein verpasster Anruf, automatisierte Terminbuchungen, bis zu 30 % höhere Auslastung.</p>
+                </div>
+
+                <!-- Case 2 -->
+                <div class="group reveal delay-200 glass-panel p-6 rounded-xl hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-3 mb-4">
+                        <iconify-icon icon="solar:chef-hat-linear" class="text-indigo-400" width="24"></iconify-icon>
+                        <h3 class="text-white font-medium">Gastronomie &amp; Hospitality</h3>
+                    </div>
+                    <p class="text-slate-400 text-sm">Reservierungen, Bestellungen &amp; Gäste-Anfragen automatisiert, Team konzentriert sich auf Service.</p>
+                </div>
+
+                <!-- Case 3 -->
+                <div class="group reveal delay-300 glass-panel p-6 rounded-xl hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-3 mb-4">
+                        <iconify-icon icon="solar:hammer-linear" class="text-indigo-400" width="24"></iconify-icon>
+                        <h3 class="text-white font-medium">Handwerk &amp; Dienstleister</h3>
+                    </div>
+                    <p class="text-slate-400 text-sm">KI-Agents managen Neukundenanfragen, Terminplanung und Follow-ups ohne Verzögerung.</p>
+                </div>
+
+                <!-- Case 4 -->
+                <div class="group reveal delay-300 glass-panel p-6 rounded-xl hover:bg-white/5 transition-colors">
+                    <div class="flex items-center gap-3 mb-4">
+                        <iconify-icon icon="solar:buildings-2-linear" class="text-indigo-400" width="24"></iconify-icon>
+                        <h3 class="text-white font-medium">Industrie &amp; Konzerne</h3>
+                    </div>
+                    <p class="text-slate-400 text-sm">KI übernimmt repetitive Aufgaben in Recruiting, HR, Support oder Vertrieb 100 % DSGVO-konform.</p>
+                </div>
+            </div>
+
+            <!-- Market Narrative -->
+            <div class="mt-20 bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border border-white/10 rounded-2xl p-8 text-center reveal">
+                <h3 class="text-2xl font-medium text-white mb-2">KI-Sprachlösungen verändern den Markt</h3>
+                <p class="text-indigo-200 font-medium mb-4">Die Zukunft des Kundenkontakts ist automatisiert.</p>
+                <p class="text-slate-400 text-sm max-w-2xl mx-auto mb-8">
+                    Novara Pro AI bringt KI-Sprachlösungen auf ein neues Level – zugänglich, skalierbar und profitabel für alle Branchen.
+                </p>
+                <button onclick="toggleModal()" class="px-6 py-2.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-slate-200 transition-colors">
+                    Jetzt mehr erfahren
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Us Comparison -->
+    <section class="py-24 max-w-7xl mx-auto px-6">
+        <h2 class="text-3xl font-medium text-center text-white mb-16 tracking-tight reveal">Der Unterschied zwischen Standard &amp; Exzellenz</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal delay-100">
+            <div class="glass-panel p-8 rounded-2xl border-red-500/20 opacity-80">
+                <h3 class="text-lg font-medium text-red-300 mb-6">Traditionelle Wege</h3>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3 text-slate-500 text-sm">
+                        <iconify-icon icon="solar:close-circle-linear" class="text-red-400 mt-0.5" width="16"></iconify-icon>
+                        Hohe Fixkosten für Personal &amp; Schulung
+                    </li>
+                    <li class="flex items-start gap-3 text-slate-500 text-sm">
+                        <iconify-icon icon="solar:close-circle-linear" class="text-red-400 mt-0.5" width="16"></iconify-icon>
+                        Erreichbarkeit nur zu Geschäftszeiten
+                    </li>
+                    <li class="flex items-start gap-3 text-slate-500 text-sm">
+                        <iconify-icon icon="solar:close-circle-linear" class="text-red-400 mt-0.5" width="16"></iconify-icon>
+                        Manuelle, fehleranfällige Prozesse
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="glass-panel p-8 rounded-2xl border-indigo-500/40 bg-indigo-500/5 relative">
+                <div class="absolute -top-3 right-8 px-3 py-1 bg-indigo-600 rounded-full text-[10px] text-white font-medium">Novara Pro AI</div>
+                <h3 class="text-lg font-medium text-white mb-6">Die Novara Lösung</h3>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3 text-slate-300 text-sm">
+                        <iconify-icon icon="solar:check-circle-linear" class="text-indigo-400 mt-0.5" width="16"></iconify-icon>
+                        Skalierbare KI-Agenten ohne Lohnnebenkosten
+                    </li>
+                    <li class="flex items-start gap-3 text-slate-300 text-sm">
+                        <iconify-icon icon="solar:check-circle-linear" class="text-indigo-400 mt-0.5" width="16"></iconify-icon>
+                        24/7 Verfügbarkeit in perfekter Qualität
+                    </li>
+                    <li class="flex items-start gap-3 text-slate-300 text-sm">
+                        <iconify-icon icon="solar:check-circle-linear" class="text-indigo-400 mt-0.5" width="16"></iconify-icon>
+                        Volle Integration: Funnels, Dashboards, CRM
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing / Offer -->
+    <section id="pricing" class="py-24 border-t border-white/5 bg-[#050507]">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="max-w-lg mx-auto p-1 rounded-2xl bg-gradient-to-b from-indigo-500/20 to-transparent reveal">
+                <div class="bg-[#0A0A0C] rounded-xl p-8 border border-white/10 text-center h-full flex flex-col">
+                    <h3 class="text-xl font-medium text-white mb-2">Novara Assurance Testpaket</h3>
+                    <div class="text-4xl font-bold text-white mb-6 mt-4">149 € <span class="text-sm font-normal text-slate-500">/ Monat</span></div>
+                    
+                    <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                        Starte mit einem Einstieg in die Welt von Novara Pro AI und erlebe, wie intelligente Automatisierung dein Business transformiert. Perfekt, um unsere Qualität, Performance und Effizienz kennenzulernen.
+                    </p>
+                    
+                    <button onclick="toggleModal()" class="w-full py-3 bg-white text-black font-semibold rounded-lg hover:bg-slate-200 transition-colors mb-6">
+                        Jetzt starten
+                    </button>
+                    
+                    <ul class="space-y-3 text-left mt-auto pl-4">
+                        <li class="flex items-center gap-3 text-xs text-slate-400">
+                            <iconify-icon icon="solar:check-circle-linear" class="text-indigo-400" width="14"></iconify-icon>
+                            Schnelles Setup
+                        </li>
+                        <li class="flex items-center gap-3 text-xs text-slate-400">
+                            <iconify-icon icon="solar:check-circle-linear" class="text-indigo-400" width="14"></iconify-icon>
+                            Erste Automatisierung
+                        </li>
+                        <li class="flex items-center gap-3 text-xs text-slate-400">
+                            <iconify-icon icon="solar:check-circle-linear" class="text-indigo-400" width="14"></iconify-icon>
+                            Kein Risiko
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-white/5 pt-12 reveal delay-100">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white mb-1">80+</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wide">Zufriedene Kunden</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white mb-1">Über 80%</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wide">Kundenerfolg</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white mb-1">69+</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wide">Abgeschlossene Projekte</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white mb-1">5+</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wide">Jahre Erfahrung</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-24 relative bg-white/[0.01]">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl font-medium text-center text-white mb-16 tracking-tight reveal">Was unsere Kunden sagen</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Testimonial 1 -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-100 relative">
+                    <div class="flex text-yellow-400 gap-0.5 mb-4">
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                        "Ich konnte nicht ans Telefon, weil ich auf der Baustelle war. Jetzt übernimmt die KI Terminvereinbarungen und Anfragen – ich habe pro Woche 8 Stunden mehr Zeit und keine Aufträge mehr verloren."
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-medium text-white">MW</div>
+                        <div>
+                            <div class="text-white text-sm font-medium">Markus Weber</div>
+                            <div class="text-slate-500 text-xs">Handwerksmeister</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-200 relative bg-white/[0.02]">
+                     <div class="flex text-yellow-400 gap-0.5 mb-4">
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                        "Dank Novara Pro AI verpassen wir keine Kundenanrufe mehr. Endlich können wir uns voll auf unsere Arbeit konzentrieren."
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-medium text-white">AK</div>
+                        <div>
+                            <div class="text-white text-sm font-medium">Anna Keller</div>
+                            <div class="text-slate-500 text-xs">Saloninhaberin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="glass-panel p-8 rounded-2xl reveal delay-300 relative">
+                     <div class="flex text-yellow-400 gap-0.5 mb-4">
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                        "Unser Recruiting war überlastet. Novara Pro AI filtert Bewerbungen, vereinbart Erstgespräche und entlastet HR um 40 %."
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-medium text-white">TR</div>
+                        <div>
+                            <div class="text-white text-sm font-medium">Thomas Richter</div>
+                            <div class="text-slate-500 text-xs">Teamleiter</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 4 -->
+                 <div class="glass-panel p-8 rounded-2xl reveal delay-300 relative bg-white/[0.02]">
+                     <div class="flex text-yellow-400 gap-0.5 mb-4">
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                        <iconify-icon icon="solar:star-bold" width="14"></iconify-icon>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                        "Vor Novara Pro AI haben wir täglich bis zu 15 Anrufe verpasst. Jetzt übernimmt der Voice Agent automatisiert… Umsatzsteigerung +22 % in 3 Monaten."
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-medium text-white">SH</div>
+                        <div>
+                            <div class="text-white text-sm font-medium">Sabine Hoffmann</div>
+                            <div class="text-slate-500 text-xs">Restaurantleiterin</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-24 max-w-3xl mx-auto px-6">
+        <h2 class="text-3xl font-medium text-center text-white mb-16 tracking-tight reveal">Häufig gestellte Fragen</h2>
+        <div class="space-y-4 reveal">
+            <details class="group bg-white/5 rounded-xl p-4 cursor-pointer border border-white/5 open:bg-white/10 transition-colors">
+                <summary class="flex justify-between items-center text-white font-medium text-sm">
+                    Was genau bietet Novara Pro AI?
+                    <iconify-icon icon="solar:alt-arrow-down-linear" class="text-slate-400 group-open:rotate-180 transition-transform" width="16"></iconify-icon>
+                </summary>
+                <div class="mt-4 text-slate-400 text-xs leading-relaxed">
+                    Wir bieten maßgeschneiderte KI-Lösungen für Sprach-, Chat- und Prozessautomatisierung, die Ihr Unternehmen effizienter und skalierbarer machen.
+                </div>
+            </details>
+            <details class="group bg-white/5 rounded-xl p-4 cursor-pointer border border-white/5 open:bg-white/10 transition-colors">
+                <summary class="flex justify-between items-center text-white font-medium text-sm">
+                    Wie schnell ist ein KI-Sprachassistent einsatzbereit?
+                    <iconify-icon icon="solar:alt-arrow-down-linear" class="text-slate-400 group-open:rotate-180 transition-transform" width="16"></iconify-icon>
+                </summary>
+                <div class="mt-4 text-slate-400 text-xs leading-relaxed">
+                    Abhängig von der Komplexität kann ein Basis-System oft innerhalb weniger Tage konfiguriert und live geschaltet werden.
+                </div>
+            </details>
+            <details class="group bg-white/5 rounded-xl p-4 cursor-pointer border border-white/5 open:bg-white/10 transition-colors">
+                <summary class="flex justify-between items-center text-white font-medium text-sm">
+                    Ersetzt die KI meine Mitarbeiter?
+                    <iconify-icon icon="solar:alt-arrow-down-linear" class="text-slate-400 group-open:rotate-180 transition-transform" width="16"></iconify-icon>
+                </summary>
+                <div class="mt-4 text-slate-400 text-xs leading-relaxed">
+                    Nein, sie entlastet sie von repetitiven Aufgaben, damit sie sich auf komplexere und wertschöpfende Tätigkeiten konzentrieren können.
+                </div>
+            </details>
+            <details class="group bg-white/5 rounded-xl p-4 cursor-pointer border border-white/5 open:bg-white/10 transition-colors">
+                <summary class="flex justify-between items-center text-white font-medium text-sm">
+                    Wie sicher sind meine Daten?
+                    <iconify-icon icon="solar:alt-arrow-down-linear" class="text-slate-400 group-open:rotate-180 transition-transform" width="16"></iconify-icon>
+                </summary>
+                <div class="mt-4 text-slate-400 text-xs leading-relaxed">
+                    Datenschutz hat höchste Priorität. Unsere Systeme arbeiten DSGVO-konform und nutzen verschlüsselte Übertragungswege.
+                </div>
+            </details>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section id="contact" class="py-24 relative overflow-hidden">
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10 reveal">
+            <h2 class="text-4xl md:text-5xl font-medium text-white tracking-tight mb-6">Starte dein Projekt</h2>
+            <p class="text-slate-400 max-w-2xl mx-auto mb-10">
+                Warte nicht, bis deine Konkurrenz dich überholt: Kontaktiere uns heute und erhalte deine KI-Lösung – exakt auf dich zugeschnitten, schnell und messbar wirksam.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button onclick="toggleModal()" class="w-full sm:w-auto px-8 py-3.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-slate-200 transition-all duration-300">
+                    Jetzt starten
+                </button>
+                <button onclick="toggleModal()" class="w-full sm:w-auto px-8 py-3.5 bg-white/5 border border-white/10 text-white text-sm font-semibold rounded-full hover:bg-white/10 transition-all duration-300">
+                    Anfrage senden
+                </button>
+            </div>
+        </div>
+        
+        <!-- Background Accents -->
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-indigo-600/10 blur-[100px] pointer-events-none"></div>
+        <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 blur-[100px] pointer-events-none"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 bg-[#020203] py-12 text-sm reveal">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between gap-8 mb-12">
+                <div class="max-w-sm">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-5 h-5 rounded bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-[9px] font-bold">N</div>
+                        <span class="text-white font-medium tracking-tight uppercase">Novara Pro AI</span>
+                    </div>
+                    <p class="text-slate-500 text-xs leading-relaxed">
+                        Intelligente Web- &amp; KI-Systeme für Wachstum und Effizienz.
+                    </p>
+                </div>
+                
+                <div class="flex gap-12 flex-wrap">
+                    <div>
+                        <h4 class="text-white font-medium mb-4">Navigation</h4>
+                        <ul class="space-y-2 text-slate-500 text-xs">
+                            <li><a href="#" class="hover:text-white transition-colors">Home</a></li>
+                            <li><a href="#about" class="hover:text-white transition-colors">Über Uns</a></li>
+                            <li><a href="#services" class="hover:text-white transition-colors">Services</a></li>
+                            <li><a href="#pricing" class="hover:text-white transition-colors">Preise</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-white font-medium mb-4">Rechtliches</h4>
+                        <ul class="space-y-2 text-slate-500 text-xs">
+                            <li><a href="#" class="hover:text-white transition-colors">Datenschutzerklärung</a></li>
+                            <li><a href="#" class="hover:text-white transition-colors">Impressum</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-slate-600 text-xs">© 2024 Novara Pro AI. All rights reserved.</p>
+                <div class="flex gap-4">
+                    <a href="#" class="text-slate-500 hover:text-white transition-colors"><iconify-icon icon="solar:camera-linear" width="16"></iconify-icon></a>
+                    <a href="#" class="text-slate-500 hover:text-white transition-colors"><iconify-icon icon="solar:link-circle-linear" width="16"></iconify-icon></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Demo Modal Popup -->
+    <div id="demo-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden-modal p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="toggleModal()"></div>
+        
+        <!-- Modal Content -->
+        <div id="modal-content" class="bg-[#0A0A0C] border border-white/10 rounded-2xl p-8 w-full max-w-md relative z-10 shadow-2xl">
+            <button onclick="toggleModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors">
+                <iconify-icon icon="solar:close-circle-linear" width="20"></iconify-icon>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-400 mb-4 border border-indigo-500/20">
+                    <iconify-icon icon="solar:calendar-mark-linear" width="20"></iconify-icon>
+                </div>
+                <h3 class="text-xl font-medium text-white mb-2">Vorteil sichern</h3>
+                <p class="text-sm text-slate-400">Erhalten Sie Ihre KI-Lösung exakt auf Sie zugeschnitten.</p>
+            </div>
+            
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Name</label>
+                    <input type="text" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" placeholder="Max Mustermann">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">E-Mail Adresse</label>
+                    <input type="email" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" placeholder="max@firma.de">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Telefonnummer</label>
+                    <input type="tel" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder-slate-600" placeholder="+49 123 456789">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Branche</label>
+                    <select class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all text-slate-400">
+                        <option value="" disabled="" selected="">Bitte wählen</option>
+                        <option value="beauty">Beauty &amp; Lifestyle</option>
+                        <option value="gastro">Gastronomie &amp; Hotels</option>
+                        <option value="handwerk">Handwerk &amp; Dienstleistung</option>
+                        <option value="industrie">Industrie &amp; Konzerne</option>
+                        <option value="other">Sonstige</option>
+                    </select>
+                </div>
+
+                <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg transition-colors mt-2 shadow-lg shadow-indigo-500/20">
+                    Anfrage senden
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Reveal Animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, observerOptions);
+
+            const revealElements = document.querySelectorAll('.reveal');
+            revealElements.forEach(el => observer.observe(el));
+        });
+
+        // Modal Functionality
+        function toggleModal() {
+            const modal = document.getElementById('demo-modal');
+            const isHidden = modal.classList.contains('hidden-modal');
+            
+            if (isHidden) {
+                modal.classList.remove('hidden-modal');
+                modal.classList.add('visible-modal');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            } else {
+                modal.classList.remove('visible-modal');
+                modal.classList.add('hidden-modal');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        }
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('demo-modal');
+                if (modal.classList.contains('visible-modal')) {
+                    toggleModal();
+                }
+            }
+        });
+    </script>
+</body></html>

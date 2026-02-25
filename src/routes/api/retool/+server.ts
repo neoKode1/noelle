@@ -2,14 +2,13 @@
  * POST /api/retool
  *
  * Accepts a GitHub repo URL + prompt, creates a retool job,
- * and enqueues a DeploymentMessage v8 to the Cubicube builder queue.
- * The queue consumer handles GitHub Actions dispatch with a working PAT.
+ * and enqueues a RetoolsDeploymentMessage v1 to the Retools builder queue.
+ * The queue consumer triggers the Pegasus Retools Engine GitHub Actions workflow.
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { parseGitHubUrl } from '$lib/types/retool';
-
-const DEPLOYMENT_SCHEMA_VERSION = 8;
+import { RETOOLS_SCHEMA_VERSION, type RetoolsDeploymentMessage } from '$lib/types/deployment-contract';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const env = platform?.env;
@@ -63,53 +62,29 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	if (!queue) throw error(503, 'Builder queue not available');
 
 	// ── Generate IDs ─────────────────────────────────────────────
-	const jobId = crypto.randomUUID().replace(/-/g, '').slice(0, 21);
-	const deploymentId = `rt_${jobId}`;
+	const jobId = `job-${crypto.randomUUID()}`;
 	const now = Date.now();
-	const domain = `${parsed.repo}-${jobId.slice(0, 8)}`;
 
 	// ── Insert job into DB ───────────────────────────────────────
 	await env.DB.prepare(
-		`INSERT INTO retool_jobs (id, user_id, github_owner, github_repo, branch, prompt, status, deployment_id, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?)`
+		`INSERT INTO retool_jobs (id, user_id, github_owner, github_repo, branch, prompt, status, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?)`
 	)
-		.bind(jobId, 'anonymous', parsed.owner, parsed.repo, resolvedBranch, prompt, deploymentId, now, now)
+		.bind(jobId, 'anonymous', parsed.owner, parsed.repo, resolvedBranch, prompt, now, now)
 		.run();
 
-	// ── Build DeploymentMessage v8 for builder queue ─────────────
+	// ── Build RetoolsDeploymentMessage v1 for builder queue ──────
 	const baseUrl = env.VITE_BASE_URL || 'https://retools.dev';
-	const deploymentMessage = {
-		schema_version: DEPLOYMENT_SCHEMA_VERSION,
-		deployment_id: deploymentId,
-		user_id: 'anonymous',
-		user_email: 'retools@nexartis.com',
-		user_name: 'Retools',
-		domain_id: jobId,
-		domain: `${domain}.cubicubes.ai`,
-		is_real_domain: false,
-		cubicube_id: null,
-		base_type: null,
-		base_ref: null,
-		branch_name: `retools-${domain}`,
-		cube_config: {
-			domain: `${domain}.cubicubes.ai`,
-			userEmail: 'retools@nexartis.com',
-			userName: 'Retools',
-			customizations: {}
-		},
-		template_repo_owner: parsed.owner,
-		template_repo_name: parsed.repo,
-		template_repo_ref: resolvedBranch,
-		addon_cubes: [],
-		custom_cube_repo_url: null,
-		ai_prompt: prompt,
-		ai_mode: 'pegasus_hb',
-		orchestrator_registry_slug: null,
-		revert_to_commit: null,
-		webhook_url: `${baseUrl}/api/webhooks/pegasus`,
-		deploy_mode: 'pr_only',
+	const deploymentMessage: RetoolsDeploymentMessage = {
+		schema_version: RETOOLS_SCHEMA_VERSION,
+		job_id: jobId,
+		timestamp: new Date().toISOString(),
+		repo_url: repoUrl,
+		branch: resolvedBranch,
 		github_token: githubToken,
-		timestamp: new Date().toISOString()
+		prompt: prompt,
+		user_email: 'retools@nexartis.com',
+		user_name: 'Retools AI'
 	};
 
 	// ── Send to builder queue ────────────────────────────────────
@@ -125,6 +100,6 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		throw error(500, 'Failed to enqueue deployment');
 	}
 
-	return json({ id: jobId, deploymentId, status: 'queued' }, { status: 201 });
+	return json({ id: jobId, status: 'queued' }, { status: 201 });
 };
 
