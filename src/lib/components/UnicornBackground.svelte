@@ -64,10 +64,11 @@
 		overflow: hidden;
 	}
 
-	/* Scene shell */
+	/* Scene shell — desaturate the baked purple to neutral gray */
 	.unicorn-scene {
 		position: absolute;
 		inset: 0;
+		filter: saturate(0) brightness(0.75);
 	}
 
 	/* Blend: light tint only — let the scene breathe */
