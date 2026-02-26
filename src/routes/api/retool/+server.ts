@@ -1,22 +1,37 @@
 /**
  * POST /api/retool
  *
- * Accepts a GitHub repo URL + prompt, creates a retool job,
- * and enqueues a RetoolsDeploymentMessage v1 to the Retools builder queue.
- * The queue triggers the Retools Builder Engine via HTTP.
+ * Accepts a GitHub repo URL + prompt (+ optional image attachments),
+ * runs the multi-agent orchestration pipeline (Claude Orchestrator →
+ * Gemini Design Agent → Claude Coding Agent), then enqueues the enriched
+ * RetoolsDeploymentMessage v1 to the Retools builder queue.
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { parseGitHubUrl } from '$lib/types/retool';
+import type { ImageAttachment } from '$lib/types/orchestration';
 import { RETOOLS_SCHEMA_VERSION, type RetoolsDeploymentMessage } from '$lib/types/deployment-contract';
 import { getDB } from '$lib/server/db';
 import { sendToQueue } from '$lib/server/queue';
+import { runOrchestration } from '$lib/server/agents/orchestrator';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const db = getDB();
 
 	const body = await request.json();
-	const { repoUrl, branch, prompt, github_token: githubToken } = body;
+	const {
+		repoUrl,
+		branch,
+		prompt,
+		github_token: githubToken,
+		screenshots
+	}: {
+		repoUrl: string;
+		branch?: string;
+		prompt: string;
+		github_token: string;
+		screenshots?: ImageAttachment[];
+	} = body;
 
 	// ── Validate inputs ──────────────────────────────────────────
 	if (!repoUrl || typeof repoUrl !== 'string') throw error(400, 'repoUrl is required');
@@ -58,6 +73,25 @@ export const POST: RequestHandler = async ({ request }) => {
 	// Final fallback (should never happen, but safety net)
 	if (!resolvedBranch) resolvedBranch = 'main';
 
+	// ── Multi-Agent Orchestration ────────────────────────────────
+	// Run the Claude Orchestrator → Gemini Design Agent → Claude Coding Agent pipeline.
+	// The synthesized prompt enriches the builder's instructions.
+	let orchestratedPrompt: string | undefined;
+	let imageAttachments: ImageAttachment[] | undefined;
+
+	try {
+		const images = Array.isArray(screenshots) ? screenshots : [];
+		imageAttachments = images.length > 0 ? images : undefined;
+		const orchestration = await runOrchestration(prompt, images);
+		orchestratedPrompt = orchestration.synthesized;
+		console.info(
+			`[orchestrator] plan: ${orchestration.plan.tasks.map((t) => t.role).join(' → ')}`
+		);
+	} catch (e) {
+		// Orchestration is non-blocking — fall back to raw prompt on error
+		console.warn('[orchestrator] failed, using raw prompt:', e);
+	}
+
 	// ── Generate IDs ─────────────────────────────────────────────
 	const jobId = `job-${crypto.randomUUID()}`;
 	const now = Date.now();
@@ -79,6 +113,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		branch: resolvedBranch,
 		github_token: githubToken,
 		prompt: prompt,
+		orchestrated_prompt: orchestratedPrompt,
+		image_attachments: imageAttachments,
 		user_email: 'noelle@nexartis.com',
 		user_name: 'Noelle AI'
 	};

@@ -1,10 +1,12 @@
 /**
- * Wizard Orchestrator — Agent Wizard AI logic (Anthropic Claude)
+ * Wizard Orchestrator — Agent Wizard AI logic (Anthropic Claude Orchestrator)
  *
- * Uses Anthropic SDK to:
+ * Uses the Claude Orchestrator model (claude-opus-4-5 by default) to:
  *   1. Maintain a conversational session stored in DB (Turso/libSQL)
  *   2. Extract structured requirements from natural language
  *   3. Recommend a template + MCP servers once enough info is gathered
+ *
+ * Model is configurable via ORCHESTRATOR_MODEL env var.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -45,7 +47,9 @@ function buildSystemPrompt(): string {
 		.map((t) => `• ${t.id} — ${t.name} (${t.framework}, ${t.category}): ${t.description}`)
 		.join('\n');
 
-	return `You are the Noelle Agent Wizard, an expert AI assistant that helps users build custom AI agents powered by the +12 Monkeys SDK on Cloudflare Workers.
+	return `You are the Noelle Agent Wizard — Noelle's lead orchestrator AI, powered by Claude Opus.
+You help users design and build custom AI agents powered by the +12 Monkeys SDK on Cloudflare Workers.
+Noelle uses a multi-agent system: you (the orchestrator) can delegate coding tasks to the Claude Coding Agent and design/UI tasks to the Gemini Design Agent.
 
 Your job is to have a friendly, concise conversation to understand what the user wants to build, then recommend the best agent template and MCP server tools.
 
@@ -153,10 +157,10 @@ export async function processWizardMessage(
 		content: m.content
 	}));
 
-	// Call Anthropic Claude
+	// Call Claude Orchestrator (model configurable via env)
 	const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 	const aiResponse = await anthropic.messages.create({
-		model: 'claude-3-5-haiku-20241022',
+		model: process.env.ORCHESTRATOR_MODEL ?? 'claude-opus-4-5',
 		max_tokens: 800,
 		system: buildSystemPrompt(),
 		messages: aiMessages

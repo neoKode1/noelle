@@ -1,13 +1,69 @@
 <script lang="ts">
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import { Send, LoaderCircle, CircleAlert, KeyRound } from 'lucide-svelte';
+	import { Send, LoaderCircle, CircleAlert, KeyRound, Paperclip, X } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
-	import { EMPTY_RETOOL_FORM, type RetoolFormData } from '$lib/types/retool';
+	import { EMPTY_RETOOL_FORM, type RetoolFormData, type ImageAttachment } from '$lib/types/retool';
 
 	let form: RetoolFormData = $state({ ...EMPTY_RETOOL_FORM });
 	let submitting = $state(false);
 	let errorMsg = $state('');
+	let screenshots = $state<ImageAttachment[]>([]);
+	let fileInput: HTMLInputElement;
+
+	const MAX_FILE_SIZE_MB = 100;
+
+	/** Convert a File to an ImageAttachment (base64). */
+	async function fileToAttachment(file: File): Promise<ImageAttachment | null> {
+		if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+			errorMsg = `${file.name} exceeds the ${MAX_FILE_SIZE_MB} MB limit.`;
+			return null;
+		}
+		if (!file.type.startsWith('image/')) {
+			errorMsg = `${file.name} is not an image file.`;
+			return null;
+		}
+		return new Promise((resolve) => {
+			const reader = new FileReader();
+			reader.onload = () => {
+				const dataUrl = reader.result as string;
+				const base64 = dataUrl.split(',')[1];
+				resolve({ name: file.name, mimeType: file.type, data: base64 });
+			};
+			reader.readAsDataURL(file);
+		});
+	}
+
+	async function handleFiles(files: FileList | File[]) {
+		errorMsg = '';
+		const arr = Array.from(files);
+		const results = await Promise.all(arr.map(fileToAttachment));
+		const valid = results.filter((r): r is ImageAttachment => r !== null);
+		screenshots = [...screenshots, ...valid];
+	}
+
+	function handleFileInput(e: Event) {
+		const input = e.target as HTMLInputElement;
+		if (input.files) handleFiles(input.files);
+		input.value = '';
+	}
+
+	function handlePaste(e: ClipboardEvent) {
+		const items = e.clipboardData?.items;
+		if (!items) return;
+		const imageFiles: File[] = [];
+		for (const item of Array.from(items)) {
+			if (item.kind === 'file' && item.type.startsWith('image/')) {
+				const file = item.getAsFile();
+				if (file) imageFiles.push(file);
+			}
+		}
+		if (imageFiles.length) handleFiles(imageFiles);
+	}
+
+	function removeScreenshot(index: number) {
+		screenshots = screenshots.filter((_, i) => i !== index);
+	}
 
 	async function handleSubmit() {
 		errorMsg = '';
@@ -20,7 +76,7 @@
 			const res = await fetch('/api/retool', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(form)
+				body: JSON.stringify({ ...form, screenshots })
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
@@ -118,14 +174,66 @@
 				<!-- Prompt -->
 				<div>
 					<label for="prompt" class="form-label">What do you want changed?</label>
-					<textarea
-						id="prompt"
-						class="form-input min-h-[160px] resize-y"
-						placeholder="e.g. Make the hero section darker with a gradient background. Add a pricing page with three tiers. Fix the mobile hamburger menu animation."
-						bind:value={form.prompt}
-						disabled={submitting}
-					></textarea>
-					<p class="text-xs text-slate-600 mt-1.5">Be specific — the more detail, the better the result.</p>
+					<div class="relative">
+						<textarea
+							id="prompt"
+							class="form-input min-h-[160px] resize-y pr-12"
+							placeholder="e.g. Make the hero section darker with a gradient background. Add a pricing page with three tiers. Fix the mobile hamburger menu animation."
+							bind:value={form.prompt}
+							disabled={submitting}
+							onpaste={handlePaste}
+						></textarea>
+						<!-- Paperclip upload trigger -->
+						<button
+							type="button"
+							title="Attach screenshots (up to {MAX_FILE_SIZE_MB} MB each)"
+							onclick={() => fileInput.click()}
+							disabled={submitting}
+							class="absolute bottom-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-brand-400 hover:bg-brand-500/10 transition-colors disabled:opacity-40"
+						>
+							<Paperclip class="w-4 h-4" />
+						</button>
+					</div>
+					<p class="text-xs text-slate-600 mt-1.5">
+						Be specific — the more detail, the better the result.
+						<span class="text-slate-500">Attach screenshots for Gemini design analysis.</span>
+					</p>
+
+					<!-- Hidden file input -->
+					<input
+						bind:this={fileInput}
+						type="file"
+						accept="image/*"
+						multiple
+						class="hidden"
+						onchange={handleFileInput}
+					/>
+
+					<!-- Screenshot previews -->
+					{#if screenshots.length > 0}
+						<div class="mt-3 flex flex-wrap gap-2">
+							{#each screenshots as img, i}
+								<div class="relative group rounded-lg overflow-hidden border border-white/10 w-20 h-20 shrink-0">
+									<img
+										src="data:{img.mimeType};base64,{img.data}"
+										alt={img.name}
+										class="w-full h-full object-cover"
+									/>
+									<button
+										type="button"
+										onclick={() => removeScreenshot(i)}
+										class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+										title="Remove {img.name}"
+									>
+										<X class="w-4 h-4 text-white" />
+									</button>
+								</div>
+							{/each}
+						</div>
+						<p class="text-[11px] text-brand-400 mt-1.5">
+							{screenshots.length} screenshot{screenshots.length > 1 ? 's' : ''} attached · Gemini Design Agent will analyze {screenshots.length > 1 ? 'them' : 'it'}
+						</p>
+					{/if}
 				</div>
 
 				<!-- Error -->

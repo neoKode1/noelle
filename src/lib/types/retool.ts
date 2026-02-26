@@ -1,5 +1,7 @@
 /** ── Retool Job Types ────────────────────────────────────────── */
 
+import type { ImageAttachment } from './orchestration';
+
 export type JobStatus =
 	| 'queued'
 	| 'cloning'
@@ -38,14 +40,19 @@ export interface RetoolFormData {
 	branch: string;
 	prompt: string;
 	github_token: string;
+	/** Optional screenshot attachments forwarded to the Gemini design agent */
+	screenshots?: ImageAttachment[];
 }
 
 export const EMPTY_RETOOL_FORM: RetoolFormData = {
 	repoUrl: '',
 	branch: 'main',
 	prompt: '',
-	github_token: ''
+	github_token: '',
+	screenshots: []
 };
+
+export type { ImageAttachment };
 
 /** Status display config for UI badges and icons. */
 export const STATUS_CONFIG: Record<JobStatus, { label: string; color: string }> = {

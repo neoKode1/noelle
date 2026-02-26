@@ -1,3 +1,5 @@
+import type { ImageAttachment } from './orchestration';
+
 /**
  * Retools Deployment Contract - Schema Version 1
  *
@@ -41,5 +43,18 @@ export interface RetoolsDeploymentMessage {
 	// User information (for PR attribution)
 	user_email?: string;
 	user_name?: string;
+
+	/**
+	 * Optional screenshots/images attached by the user.
+	 * Forwarded to the Gemini Design Agent for visual analysis.
+	 * Base64-encoded; mimeType must be image/png | image/jpeg | image/webp | image/gif.
+	 */
+	image_attachments?: ImageAttachment[];
+
+	/**
+	 * Enriched prompt produced by the Claude Orchestrator after consulting sub-agents.
+	 * When present, the builder engine should prefer this over the raw `prompt`.
+	 */
+	orchestrated_prompt?: string;
 }
 

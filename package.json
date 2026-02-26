@@ -46,6 +46,7 @@
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.72.0",
+		"@google/generative-ai": "^0.24.1",
 		"drizzle-orm": "^0.45.0",
 		"lucide-svelte": "^0.563.0",
 		"nanoid": "^5.1.0",
