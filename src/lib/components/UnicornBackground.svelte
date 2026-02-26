@@ -75,10 +75,10 @@
 		position: absolute;
 		inset: 0;
 		background:
-			/* Nexartis navy top-left glow */
-			radial-gradient(ellipse 60% 50% at 20% 10%, rgba(10, 18, 69, 0.25) 0%, transparent 70%),
-			/* Indigo brand mid-centre glow */
-			radial-gradient(ellipse 50% 40% at 70% 40%, rgba(99, 102, 241, 0.10) 0%, transparent 65%);
+			/* Top-left glow */
+			radial-gradient(ellipse 60% 50% at 20% 10%, oklch(37.2% 0.044 257.287 / 0.35) 0%, transparent 70%),
+			/* Mid-centre glow */
+			radial-gradient(ellipse 50% 40% at 70% 40%, oklch(37.2% 0.044 257.287 / 0.18) 0%, transparent 65%);
 	}
 
 	/* Fade the scene out at the bottom so sections blend seamlessly */
