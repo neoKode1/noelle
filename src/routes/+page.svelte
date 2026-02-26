@@ -2,6 +2,7 @@
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import UnicornBackground from '$lib/components/UnicornBackground.svelte';
+	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
@@ -127,12 +128,16 @@
 			<h2 class="text-3xl font-medium text-center text-white mb-16 tracking-tight reveal">How It Works</h2>
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 				{#each [
-					{ step: '01', emoji: '📋', title: 'Paste Your Repo', desc: 'Enter your GitHub repo URL and describe what you want changed in plain language.' },
-					{ step: '02', emoji: '🤖', title: 'AI Builds the Changes', desc: 'Our AI clones your repo, applies your changes, and pushes a branch with the result.' },
-					{ step: '03', emoji: '🚀', title: 'Review & Merge', desc: 'A PR lands in your repo. Review the diff, approve, and merge through your own pipeline.' }
+					{ step: '01', icon: 'ph:git-repository-bold', title: 'Paste Your Repo', desc: 'Enter your GitHub repo URL and describe what you want changed in plain language.' },
+					{ step: '02', icon: 'ph:robot-bold', title: 'AI Builds the Changes', desc: 'Our AI clones your repo, applies your changes, and pushes a branch with the result.' },
+					{ step: '03', icon: 'ph:git-pull-request-bold', title: 'Review & Merge', desc: 'A PR lands in your repo. Review the diff, approve, and merge through your own pipeline.' }
 				] as item}
 					<div class="glass-panel p-8 rounded-2xl reveal delay-100 group hover:border-brand-500/30 transition-colors text-center">
-						<div class="text-3xl mb-4">{item.emoji}</div>
+						<div class="mb-4 flex justify-center">
+							<div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-300 group-hover:bg-brand-500/15 transition-colors">
+								<Icon icon={item.icon} width="24" height="24" />
+							</div>
+						</div>
 						<div class="text-xs font-bold text-brand-400 uppercase tracking-widest mb-3">Step {item.step}</div>
 						<h3 class="text-lg font-medium text-white mb-2">{item.title}</h3>
 						<p class="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
@@ -148,13 +153,15 @@
 			<h2 class="text-3xl font-medium text-white mb-12 tracking-tight reveal">What Can You Retool?</h2>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				{#each [
-					{ emoji: '🎨', title: 'Visual Overhauls', desc: 'Update colors, typography, layouts, or make your site mobile-friendly with a single prompt.' },
-					{ emoji: '⚙️', title: 'Feature Changes', desc: 'Add new pages, fix bugs, refactor components, or integrate APIs — just describe it.' },
-					{ emoji: '🔄', title: 'Full Rebuilds', desc: 'Migrate to modern stacks. Describe the end state and let the AI handle the transformation.' },
-					{ emoji: '👁️', title: 'PR Before Production', desc: 'Every change opens a PR in your repo. Review the diff before anything touches main.' }
+					{ icon: 'ph:paint-brush-bold', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20', title: 'Visual Overhauls', desc: 'Update colors, typography, layouts, or make your site mobile-friendly with a single prompt.' },
+					{ icon: 'ph:lightning-bold', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', title: 'Feature Changes', desc: 'Add new pages, fix bugs, refactor components, or integrate APIs — just describe it.' },
+					{ icon: 'ph:stack-bold', color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20', title: 'Full Rebuilds', desc: 'Migrate to modern stacks. Describe the end state and let the AI handle the transformation.' },
+					{ icon: 'ph:shield-check-bold', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', title: 'PR Before Production', desc: 'Every change opens a PR in your repo. Review the diff before anything touches main.' }
 				] as item}
 					<div class="group reveal delay-100 glass-panel p-6 rounded-xl hover:bg-white/5 transition-colors flex items-start gap-4">
-						<div class="w-10 h-10 rounded-lg bg-brand-500/10 flex items-center justify-center flex-shrink-0 text-lg">{item.emoji}</div>
+						<div class="w-10 h-10 rounded-lg border flex items-center justify-center flex-shrink-0 {item.bg} {item.color} group-hover:scale-105 transition-transform">
+							<Icon icon={item.icon} width="20" height="20" />
+						</div>
 						<div>
 							<h3 class="font-medium text-white mb-1">{item.title}</h3>
 							<p class="text-slate-400 text-sm leading-relaxed">{item.desc}</p>

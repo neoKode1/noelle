@@ -2,6 +2,7 @@
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { Send, LoaderCircle, CircleAlert, KeyRound, Paperclip, X } from 'lucide-svelte';
+	import Icon from '@iconify/svelte';
 	import { goto } from '$app/navigation';
 	import { EMPTY_RETOOL_FORM, type RetoolFormData, type ImageAttachment } from '$lib/types/retool';
 
@@ -338,10 +339,18 @@
 			<div class="mt-8 pt-6 border-t border-white/5">
 				<p class="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-4">How it works</p>
 				<div class="grid grid-cols-3 gap-4 text-center">
-					{#each [['📋', 'Submit repo + prompt'], ['🤖', 'AI builds changes'], ['🚀', 'PR lands in your repo']] as [emoji, label]}
+					{#each [
+						{ icon: 'ph:git-repository-bold', label: 'Submit repo + prompt' },
+						{ icon: 'ph:robot-bold', label: 'AI builds changes' },
+						{ icon: 'ph:git-pull-request-bold', label: 'PR lands in your repo' }
+					] as item}
 						<div class="text-center">
-							<div class="text-xl mb-1">{emoji}</div>
-							<p class="text-xs text-slate-500">{label}</p>
+							<div class="mb-1.5 flex justify-center">
+								<div class="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400">
+									<Icon icon={item.icon} width="16" height="16" />
+								</div>
+							</div>
+							<p class="text-xs text-slate-500">{item.label}</p>
 						</div>
 					{/each}
 				</div>
