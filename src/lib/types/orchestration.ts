@@ -83,7 +83,7 @@ export function getAgentModelConfig(): AgentModelConfig {
 	return {
 		orchestratorModel: process.env.ORCHESTRATOR_MODEL ?? 'claude-opus-4-5',
 		codingModel: process.env.CODING_MODEL ?? 'claude-sonnet-4-5',
-		designModel: process.env.DESIGN_MODEL ?? 'gemini-1.5-pro'
+		designModel: process.env.DESIGN_MODEL ?? 'gemini-2.0-flash'
 	};
 }
 

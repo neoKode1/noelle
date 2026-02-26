@@ -96,6 +96,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	const jobId = `job-${crypto.randomUUID()}`;
 	const now = Date.now();
 
+	// ── Ensure anonymous user exists (FK guard) ───────────────────
+	// D1/SQLite foreign key enforcement may be disabled by default, but we
+	// upsert the sentinel row defensively so the constraint is always satisfied.
+	await db.prepare(
+		`INSERT OR IGNORE INTO users (id, email, name, created_at, updated_at)
+		 VALUES ('anonymous', 'anonymous@noelle.ai', 'Anonymous', ?, ?)`
+	)
+		.bind(now, now)
+		.run();
+
 	// ── Insert job into DB ───────────────────────────────────────
 	await db.prepare(
 		`INSERT INTO retool_jobs (id, user_id, github_owner, github_repo, branch, prompt, status, created_at, updated_at)

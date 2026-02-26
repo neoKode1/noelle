@@ -161,11 +161,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		binds.push(payload.message);
 	}
 
-	if (builderStatus === 'preview_ready') {
-		sets.push('completed_at = ?');
-		binds.push(now);
-	}
-
 	// ── Update DB ────────────────────────────────────────────────
 	binds.push(job_id);
 	await db.prepare(
