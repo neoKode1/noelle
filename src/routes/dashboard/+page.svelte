@@ -118,8 +118,8 @@
 										<div class="w-5 h-1 rounded-full transition-colors {i <= step ? 'bg-brand-500' : 'bg-white/10'}"></div>
 									{/each}
 								</div>
-								{#if job.previewUrl}
-									<a href={job.previewUrl} target="_blank" rel="noopener noreferrer"
+								{#if job.prUrl}
+									<a href={job.prUrl} target="_blank" rel="noopener noreferrer"
 										class="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition-all"
 										onclick={(e) => e.stopPropagation()}>
 										View PR

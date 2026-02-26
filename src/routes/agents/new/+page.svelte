@@ -3,6 +3,7 @@
 	import type { ChatMessage, ExtractedRequirements, AgentRecommendation } from '$lib/types/agent';
 	import type { ImageAttachment } from '$lib/types/retool';
 	import Icon from '@iconify/svelte';
+	import { goto } from '$app/navigation';
 
 	// ── State ────────────────────────────────────────────────────────────────────
 	let sessionId = $state<string | null>(null);
@@ -123,6 +124,16 @@
 			e.preventDefault();
 			send();
 		}
+	}
+
+	function generateAgentPackage() {
+		if (!recommendation) return;
+		// Pre-fill the prompt with the wizard's recommendation rationale so
+		// the user lands on /retool with context already prepared.
+		const prompt = encodeURIComponent(
+			`Build a ${recommendation.template_name} agent.\n\n${recommendation.rationale}\n\nFramework: ${recommendation.framework}\nDeployment: ${recommendation.deployment_type}\n${recommendation.mcp_servers?.length ? `MCP Servers: ${recommendation.mcp_servers.join(', ')}` : ''}`
+		);
+		goto(`/retool?prompt=${prompt}`);
 	}
 </script>
 
@@ -336,7 +347,10 @@
 							</div>
 						{/if}
 						{#if recommendation.ready_to_generate}
-							<button class="mt-5 w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-brand-500/20">
+							<button
+								onclick={generateAgentPackage}
+								class="mt-5 w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-brand-500/20"
+							>
 								Generate Agent Package →
 							</button>
 						{/if}

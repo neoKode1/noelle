@@ -13,6 +13,8 @@
 	let refinePrompt = $state('');
 	let refineToken = $state('');
 	let refining = $state(false);
+	let approving = $state(false);
+	let approveError = $state('');
 
 	const jobId = page.params.id;
 	const IN_PROGRESS_STATUSES = ['queued', 'cloning', 'customizing', 'building', 'deploying'];
@@ -62,6 +64,22 @@
 			goto(`/dashboard/${data.id}`);
 		} catch { errorMsg = 'Failed to submit refinement.'; }
 		finally { refining = false; }
+	}
+
+	async function handleApprove() {
+		if (!job || approving) return;
+		approving = true;
+		approveError = '';
+		try {
+			const res = await fetch(`/api/jobs/${job.id}/approve`, { method: 'POST' });
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				approveError = data.message || 'Approval failed';
+				return;
+			}
+			job = await res.json();
+		} catch { approveError = 'Failed to approve job.'; }
+		finally { approving = false; }
 	}
 </script>
 
@@ -199,7 +217,21 @@
 										<Icon icon="ph:arrow-square-out-bold" width="14" height="14" /> Open Live Preview
 									</a>
 								{/if}
+								<button
+									onclick={handleApprove}
+									disabled={approving}
+									class="btn-primary gap-2 inline-flex text-sm"
+								>
+									{#if approving}
+										<Icon icon="ph:spinner-bold" width="14" height="14" class="animate-spin" /> Approving…
+									{:else}
+										<Icon icon="ph:check-circle-bold" width="14" height="14" /> Approve & Deploy
+									{/if}
+								</button>
 							</div>
+							{#if approveError}
+								<p class="mt-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{approveError}</p>
+							{/if}
 						</div>
 
 						<!-- Live Preview iframe (only when a real hosted URL is available) -->
