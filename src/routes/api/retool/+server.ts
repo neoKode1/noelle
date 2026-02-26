@@ -82,7 +82,14 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const images = Array.isArray(screenshots) ? screenshots : [];
 		imageAttachments = images.length > 0 ? images : undefined;
-		const orchestration = await runOrchestration(prompt, images);
+		// 90-second hard timeout — prevents the function from hanging until Vercel
+		// kills it, while still giving the 3-step AI pipeline enough runway.
+		const orchestration = await Promise.race([
+			runOrchestration(prompt, images),
+			new Promise<never>((_, reject) =>
+				setTimeout(() => reject(new Error('Orchestration timeout after 90s')), 90_000)
+			)
+		]);
 		orchestratedPrompt = orchestration.synthesized;
 		console.info(
 			`[orchestrator] plan: ${orchestration.plan.tasks.map((t) => t.role).join(' → ')}`
