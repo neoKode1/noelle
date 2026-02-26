@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import UnicornBackground from '$lib/components/UnicornBackground.svelte';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
@@ -13,6 +14,7 @@
 	});
 </script>
 
+<UnicornBackground />
 <Navbar />
 
 <main class="pt-16">
