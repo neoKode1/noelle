@@ -27,6 +27,8 @@ declare global {
 				ASSETS_BUCKET: R2Bucket;
 				// HMAC secret for verifying Pegasus Retools Engine webhook callbacks (Secrets Store binding)
 				RETOOLS_WEBHOOK_SECRET: { get: () => Promise<string> };
+				// Cloudflare Workers AI
+				AI: Ai;
 				// Builder queue for Retools PR generation pipeline
 				BUILDER_QUEUE: Queue;
 				// Logging configuration
