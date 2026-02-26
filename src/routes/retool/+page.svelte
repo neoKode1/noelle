@@ -6,7 +6,6 @@
 	import { EMPTY_RETOOL_FORM, type RetoolFormData, type ImageAttachment } from '$lib/types/retool';
 
 	let form: RetoolFormData = $state({ ...EMPTY_RETOOL_FORM });
-	let submitting = $state(false);
 	let errorMsg = $state('');
 	let screenshots = $state<ImageAttachment[]>([]);
 	let fileInput: HTMLInputElement;
@@ -71,25 +70,20 @@
 		if (!form.github_token.trim()) { errorMsg = 'GitHub token is required.'; return; }
 		if (!form.prompt.trim()) { errorMsg = 'Describe what you want changed.'; return; }
 
-		submitting = true;
-		try {
-			const res = await fetch('/api/retool', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ ...form, screenshots })
-			});
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				errorMsg = data.message || `Error ${res.status}`;
-				return;
-			}
-			const { id } = await res.json();
-			goto(`/dashboard/${id}`);
-		} catch (e) {
-			errorMsg = 'Network error. Please try again.';
-		} finally {
-			submitting = false;
-		}
+		// Generate the job ID here so we can navigate before the API responds.
+		const jobId = `job-${crypto.randomUUID()}`;
+
+		// Navigate immediately — the dashboard will poll until the job exists.
+		goto(`/dashboard/${jobId}`);
+
+		// Fire the API call in the background (not awaited before navigation).
+		fetch('/api/retool', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ ...form, screenshots, job_id: jobId })
+		}).catch((e) => {
+			console.error('[retool] background submission error:', e);
+		});
 	}
 </script>
 
@@ -209,7 +203,6 @@
 						class="form-input"
 						placeholder="https://github.com/your-org/your-repo"
 						bind:value={form.repoUrl}
-						disabled={submitting}
 					/>
 					<p class="text-xs text-slate-600 mt-1.5">Must be a public GitHub repo or one your account has access to.</p>
 				</div>
@@ -223,7 +216,6 @@
 						class="form-input"
 						placeholder="main"
 						bind:value={form.branch}
-						disabled={submitting}
 					/>
 				</div>
 
@@ -238,8 +230,7 @@
 						class="form-input font-mono tracking-wider"
 						placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
 						bind:value={form.github_token}
-						disabled={submitting}
-						autocomplete="off"
+					autocomplete="off"
 					/>
 					<p class="text-xs text-slate-600 mt-1.5">
 						Needs <code class="text-slate-400 bg-white/5 px-1 rounded text-[11px]">repo</code> scope. Used only to push a branch and open a PR — never stored.
@@ -256,15 +247,13 @@
 							class="form-input min-h-[160px] resize-y pr-12"
 							placeholder="e.g. Make the hero section darker with a gradient background. Add a pricing page with three tiers. Fix the mobile hamburger menu animation."
 							bind:value={form.prompt}
-							disabled={submitting}
-							onpaste={handlePaste}
+						onpaste={handlePaste}
 						></textarea>
 						<!-- Paperclip upload trigger -->
 						<button
 							type="button"
 							title="Attach screenshots (up to {MAX_FILE_SIZE_MB} MB each)"
 							onclick={() => fileInput.click()}
-							disabled={submitting}
 							class="absolute bottom-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-brand-400 hover:bg-brand-500/10 transition-colors disabled:opacity-40"
 						>
 							<Icon icon="ph:paperclip-bold" width="16" height="16" />
@@ -324,13 +313,8 @@
 				<button
 					type="submit"
 					class="btn-secondary w-full gap-2 py-3"
-					disabled={submitting}
 				>
-					{#if submitting}
-						<Icon icon="ph:spinner-bold" width="16" height="16" class="animate-spin" /> Dispatching build…
-					{:else}
-						<Icon icon="ph:paper-plane-right-bold" width="16" height="16" /> Build with Noelle
-					{/if}
+					<Icon icon="ph:paper-plane-right-bold" width="16" height="16" /> Build with Noelle
 				</button>
 			</form>
 

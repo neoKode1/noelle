@@ -28,13 +28,15 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		branch,
 		prompt,
 		github_token: githubToken,
-		screenshots
+		screenshots,
+		job_id: clientJobId
 	}: {
 		repoUrl: string;
 		branch?: string;
 		prompt: string;
 		github_token: string;
 		screenshots?: ImageAttachment[];
+		job_id?: string;
 	} = body;
 
 	// ── Validate inputs ──────────────────────────────────────────
@@ -80,8 +82,12 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const images = Array.isArray(screenshots) ? screenshots : [];
 	const imageAttachments: ImageAttachment[] | undefined = images.length > 0 ? images : undefined;
 
-	// ── Generate IDs ─────────────────────────────────────────────
-	const jobId = `job-${crypto.randomUUID()}`;
+	// ── Resolve job ID ───────────────────────────────────────────
+	// Use the client-provided ID (pre-generated for instant navigation) or create one.
+	const jobId =
+		typeof clientJobId === 'string' && /^job-[0-9a-f-]{36}$/.test(clientJobId)
+			? clientJobId
+			: `job-${crypto.randomUUID()}`;
 	const now = Date.now();
 
 	// ── Persist job to D1 immediately ────────────────────────────

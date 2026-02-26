@@ -9,6 +9,7 @@
 
 	let job: RetoolJob | null = $state(null);
 	let loading = $state(true);
+	let queuing = $state(false); // true while job record hasn't been created yet
 	let errorMsg = $state('');
 	let refinePrompt = $state('');
 	let refineToken = $state('');
@@ -22,7 +23,14 @@
 	async function fetchJob() {
 		try {
 			const res = await fetch(`/api/jobs/${jobId}`);
+			if (res.status === 404) {
+				// Job record not created yet — keep polling silently.
+				queuing = true;
+				loading = false;
+				return;
+			}
 			if (!res.ok) throw new Error('Job not found');
+			queuing = false;
 			job = await res.json();
 		} catch { errorMsg = 'Failed to load job.'; }
 		loading = false;
@@ -31,12 +39,13 @@
 	onMount(() => {
 		fetchJob();
 		const interval = setInterval(async () => {
-			if (job && IN_PROGRESS_STATUSES.includes(job.status)) {
+			// Keep polling while queuing (job not yet in DB) or while in-progress.
+			if (!job || IN_PROGRESS_STATUSES.includes(job.status)) {
 				await fetchJob();
-			} else if (job && !IN_PROGRESS_STATUSES.includes(job.status)) {
+			} else {
 				clearInterval(interval);
 			}
-		}, 3000);
+		}, 2000);
 		return () => clearInterval(interval);
 	});
 
@@ -100,6 +109,12 @@
 			<div class="glass-panel rounded-2xl text-center py-20">
 				<Icon icon="ph:spinner-bold" width="32" height="32" class="text-brand-400 mx-auto mb-3 animate-spin" />
 				<p class="text-slate-500 text-sm">Loading job…</p>
+			</div>
+		{:else if queuing}
+			<div class="glass-panel rounded-2xl text-center py-20">
+				<Icon icon="ph:spinner-bold" width="32" height="32" class="text-brand-400 mx-auto mb-3 animate-spin" />
+				<p class="text-white text-sm font-medium mb-1">Creating job…</p>
+				<p class="text-slate-500 text-xs">Queuing your build. You'll see the pipeline in a moment.</p>
 			</div>
 		{:else if !job}
 			<div class="glass-panel rounded-2xl text-center py-20">
