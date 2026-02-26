@@ -186,59 +186,6 @@
 		</div>
 	</section>
 
-	<!-- ═══ MCP TEASER ═══ -->
-	<section class="py-24 border-y border-white/5 bg-[#050507]">
-		<div class="container-wide">
-			<div class="flex flex-col md:flex-row items-center gap-12">
-				<!-- Text -->
-				<div class="flex-1 reveal">
-					<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-500/30 bg-brand-500/10 text-brand-300 text-[11px] font-medium mb-5">
-						<span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
-						Powered by +12 Monkeys SDK
-					</div>
-					<h2 class="text-3xl md:text-4xl font-medium tracking-tight text-white mb-4">
-						Build AI Agents.<br>Connect Any Tool.
-					</h2>
-					<p class="text-slate-400 leading-relaxed mb-8 max-w-lg">
-						Browse 30+ Model Context Protocol (MCP) servers — databases, APIs, dev tools, and more. Configure your agent's toolset in minutes, no boilerplate required.
-					</p>
-					<div class="flex flex-wrap gap-3">
-						<a href="/mcp" class="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-full transition-all duration-300 shadow-lg shadow-brand-500/20 inline-flex items-center gap-2">
-							Browse MCP Servers
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-						</a>
-						<a href="/agents/new" class="px-6 py-3 bg-white/5 border border-white/10 text-white text-sm font-semibold rounded-full hover:bg-white/10 transition-all duration-300 inline-flex items-center gap-2">
-							Build an Agent →
-						</a>
-					</div>
-				</div>
-
-				<!-- Server preview cards -->
-				<div class="flex-1 grid grid-cols-2 gap-3 reveal delay-100">
-					{#each [
-						{ icon: '🐘', name: 'PostgreSQL', cat: 'Data & Databases', official: true },
-						{ icon: '🐙', name: 'GitHub', cat: 'Dev Tools', official: true },
-						{ icon: '🔍', name: 'Brave Search', cat: 'Search', official: true },
-						{ icon: '📊', name: 'Google Sheets', cat: 'Productivity', official: false },
-						{ icon: '🧠', name: 'Memory', cat: 'AI & ML', official: true },
-						{ icon: '🔓', name: 'Breach Intel', cat: 'Intelligence', official: false }
-					] as s}
-						<div class="glass-panel rounded-xl p-4 flex items-start gap-3 hover:border-brand-500/25 transition-colors">
-							<span class="text-xl leading-none mt-0.5">{s.icon}</span>
-							<div class="min-w-0">
-								<div class="flex items-center gap-1.5">
-									<span class="text-xs font-semibold text-white truncate">{s.name}</span>
-									{#if s.official}<span class="text-[9px] font-bold text-brand-400 shrink-0">✓</span>{/if}
-								</div>
-								<span class="text-[10px] text-slate-500">{s.cat}</span>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-		</div>
-	</section>
-
 	<!-- ═══ FINAL CTA ═══ -->
 	<section class="py-24 relative overflow-hidden">
 		<div class="absolute bottom-0 left-0 w-64 h-64 bg-brand-600/10 blur-[100px] pointer-events-none"></div>
