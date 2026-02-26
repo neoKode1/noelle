@@ -12,6 +12,12 @@
  * Env vars:
  *   ANTHROPIC_API_KEY    — Anthropic API key
  *   ORCHESTRATOR_MODEL   — Model override (default: claude-opus-4-5)
+ *
+ * Optimizations:
+ *   - Singleton Anthropic client (one HTTP pool for all calls)
+ *   - Prompt caching on system prompts (cache_control: ephemeral)
+ *   - Tool use for orchestration plan (guaranteed valid JSON, no text parsing)
+ *   - Separate system/user split in synthesizeResults to enable caching
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -24,7 +30,19 @@ import type {
 import { runDesignAgent } from './design-agent';
 import { runCodingAgent } from './coding-agent';
 
+// ── Singleton client ──────────────────────────────────────────────────────────
+// One instance per process — reuses the underlying HTTP connection pool.
+let _anthropic: Anthropic | null = null;
+function getClient(): Anthropic {
+	if (!_anthropic) {
+		_anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+	}
+	return _anthropic;
+}
+
 // ── System Prompt ─────────────────────────────────────────────────────────────
+// Stored as a cached content block — Anthropic caches this for 5 min after the
+// first call, so repeat requests pay only 10% of normal input token cost.
 
 const ORCHESTRATOR_SYSTEM_PROMPT = `You are Noelle's Lead Orchestrator — a senior engineering lead who coordinates a team of AI sub-agents.
 
@@ -35,30 +53,52 @@ Your team:
 Your job for each user request:
 1. Analyze the prompt and any attached screenshots.
 2. Decide which agents to invoke. Always invoke Design Agent when screenshots are present.
-3. Return a JSON plan using EXACTLY this format:
-
-__PLAN__
-{
-  "rationale": "Why you chose these agents and this order",
-  "tasks": [
-    {
-      "role": "designer",
-      "instruction": "Specific instruction for the design agent",
-      "includesImages": true
-    },
-    {
-      "role": "coder",
-      "instruction": "Specific instruction for the coding agent, incorporating design output"
-    }
-  ]
-}
-__PLAN_END__
+3. Call the \`create_orchestration_plan\` tool with your plan.
 
 Rules:
 - Only include agents that are truly needed.
 - If no screenshots: skip the designer unless the prompt is explicitly about UI/design.
 - "instruction" must be self-contained — each agent only sees its own instruction.
 - Keep instructions concise (3-5 sentences max per agent).`;
+
+// Tool definition for the orchestration plan — replaces fragile text parsing.
+const PLAN_TOOL: Anthropic.Tool = {
+	name: 'create_orchestration_plan',
+	description: 'Submit the agent execution plan',
+	input_schema: {
+		type: 'object' as const,
+		properties: {
+			rationale: {
+				type: 'string',
+				description: 'Why you chose these agents and this order'
+			},
+			tasks: {
+				type: 'array',
+				description: 'Ordered list of sub-agent tasks to execute',
+				items: {
+					type: 'object',
+					properties: {
+						role: { type: 'string', enum: ['designer', 'coder'] },
+						instruction: { type: 'string', description: 'Self-contained instruction for the agent' },
+						includesImages: { type: 'boolean', description: 'Whether to pass attached images to this agent' }
+					},
+					required: ['role', 'instruction']
+				}
+			}
+		},
+		required: ['rationale', 'tasks']
+	}
+};
+
+// Static system prompt for the synthesis step — cached separately.
+const SYNTHESIS_SYSTEM_PROMPT = `You are the lead developer synthesizing the work of your sub-agents into a single, unified implementation brief.
+
+Your output must:
+1. Merge design specs with the code plan coherently.
+2. Be written as a direct instruction to the Retools Builder Engine (which will make actual code changes).
+3. List every specific change to make, in order of priority.
+4. Include exact file paths, Tailwind classes, color values, and component names where specified.
+5. Be under 800 words.`;
 
 // ── Synthesis ─────────────────────────────────────────────────────────────────
 
@@ -67,32 +107,28 @@ async function synthesizeResults(
 	results: SubAgentResult[],
 	model: string
 ): Promise<string> {
-	const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+	const anthropic = getClient();
 
 	const agentOutputs = results
 		.filter((r) => r.success && r.output)
 		.map((r) => `### ${r.role.toUpperCase()} AGENT OUTPUT (${r.model})\n${r.output}`)
 		.join('\n\n---\n\n');
 
-	const synthPrompt = `You are the lead developer synthesizing the work of your sub-agents into a single, unified implementation brief.
-
-Original user request:
-${originalPrompt}
-
-Sub-agent outputs:
-${agentOutputs}
-
-Produce a final, consolidated implementation brief that:
-1. Merges the design specs with the code plan coherently.
-2. Is written as a direct instruction to the Retools Builder Engine (which will make actual code changes).
-3. Lists every specific change to make, in order of priority.
-4. Includes exact file paths, Tailwind classes, color values, and component names where specified.
-5. Is under 800 words.`;
+	// Variable content goes in the user message; static role instructions are
+	// in the system prompt with cache_control so they're only charged once.
+	const userContent = `Original user request:\n${originalPrompt}\n\nSub-agent outputs:\n${agentOutputs}`;
 
 	const response = await anthropic.messages.create({
 		model,
 		max_tokens: 1200,
-		messages: [{ role: 'user', content: synthPrompt }]
+		system: [
+			{
+				type: 'text',
+				text: SYNTHESIS_SYSTEM_PROMPT,
+				cache_control: { type: 'ephemeral' }
+			}
+		],
+		messages: [{ role: 'user', content: userContent }]
 	});
 
 	return response.content[0].type === 'text' ? response.content[0].text : originalPrompt;
@@ -105,40 +141,38 @@ async function buildPlan(
 	hasImages: boolean,
 	model: string
 ): Promise<OrchestrationPlan> {
-	const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+	const anthropic = getClient();
 
-	const userMsg = `User request: ${prompt}\n\nScreenshots attached: ${hasImages ? 'yes' : 'no'}\n\nProduce the orchestration plan.`;
+	const userMsg = `User request: ${prompt}\n\nScreenshots attached: ${hasImages ? 'yes' : 'no'}\n\nCall create_orchestration_plan with your plan.`;
 
+	// tool_choice: {type:'tool'} forces Claude to always call the tool —
+	// no text output, guaranteed valid JSON, zero parsing failures.
 	const response = await anthropic.messages.create({
 		model,
 		max_tokens: 1024,
-		system: ORCHESTRATOR_SYSTEM_PROMPT,
+		system: [
+			{
+				type: 'text',
+				text: ORCHESTRATOR_SYSTEM_PROMPT,
+				cache_control: { type: 'ephemeral' }
+			}
+		],
+		tools: [PLAN_TOOL],
+		tool_choice: { type: 'tool', name: 'create_orchestration_plan' },
 		messages: [{ role: 'user', content: userMsg }]
 	});
 
-	const raw = response.content[0].type === 'text' ? response.content[0].text : '';
-
-	const start = raw.indexOf('__PLAN__');
-	const end = raw.indexOf('__PLAN_END__');
-
-	if (start === -1 || end === -1) {
-		// Fallback: just run the coding agent
-		return {
-			rationale: 'Defaulting to coding agent only (plan parse failed).',
-			tasks: [{ role: 'coder', instruction: prompt }]
-		};
+	// Extract the tool call input directly — no text parsing needed.
+	const toolUse = response.content.find((b) => b.type === 'tool_use');
+	if (toolUse && toolUse.type === 'tool_use') {
+		return toolUse.input as OrchestrationPlan;
 	}
 
-	try {
-		const json = raw.slice(start + '__PLAN__'.length, end).trim();
-		const parsed = JSON.parse(json);
-		return parsed as OrchestrationPlan;
-	} catch {
-		return {
-			rationale: 'Defaulting to coding agent only (JSON parse failed).',
-			tasks: [{ role: 'coder', instruction: prompt }]
-		};
-	}
+	// Fallback only if tool_use block is somehow missing (should not happen with tool_choice forced)
+	return {
+		rationale: 'Defaulting to coding agent only.',
+		tasks: [{ role: 'coder', instruction: prompt }]
+	};
 }
 
 // ── Main Entry Point ──────────────────────────────────────────────────────────

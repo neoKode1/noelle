@@ -131,7 +131,7 @@
 
 					<p class="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-4">Before you begin</p>
 
-					<div class="space-y-4" style="font-family: 'Dancing Script', cursive;">
+					<div class="space-y-4">
 						<!-- Repo visibility -->
 						<div>
 							<p class="text-[15px] font-semibold text-slate-300 leading-snug mb-1">Public or Private?</p>
@@ -188,7 +188,6 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class="text-[13px] text-brand-400 hover:text-brand-300 transition-colors"
-							style="font-family: 'Dancing Script', cursive;"
 						>
 							→ Generate a token now
 						</a>

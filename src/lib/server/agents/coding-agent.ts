@@ -11,10 +11,27 @@
  * Env vars:
  *   ANTHROPIC_API_KEY — Anthropic API key
  *   CODING_MODEL      — Model override (default: claude-sonnet-4-5)
+ *
+ * Optimizations:
+ *   - Singleton Anthropic client
+ *   - Prompt caching on system prompt (cache_control: ephemeral)
+ *   - Extended Thinking enabled (budget: 8000 tokens) for complex code tasks
  */
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { SubAgentTask, SubAgentResult } from '$lib/types/orchestration';
+
+// ── Singleton client ──────────────────────────────────────────────────────────
+let _anthropic: Anthropic | null = null;
+function getClient(): Anthropic {
+	if (!_anthropic) {
+		_anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+	}
+	return _anthropic;
+}
+
+// ── System Prompt ─────────────────────────────────────────────────────────────
+// Marked for prompt caching — paid at 10% cost on cache hits after first call.
 
 const CODING_SYSTEM_PROMPT = `You are Noelle's Coding Agent — a senior full-stack developer specializing in modern web frameworks.
 
@@ -43,20 +60,34 @@ export async function runCodingAgent(task: SubAgentTask): Promise<SubAgentResult
 	const model = process.env.CODING_MODEL ?? 'claude-sonnet-4-5';
 
 	try {
-		const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+		const anthropic = getClient();
 
 		const userContent = task.context
 			? `${task.instruction}\n\n---\nContext:\n${task.context}`
 			: task.instruction;
 
+		// Extended Thinking gives the model internal scratchpad space before
+		// writing its answer — produces significantly better code for complex tasks.
+		// max_tokens must be > budget_tokens (thinking) + expected output tokens.
 		const response = await anthropic.messages.create({
 			model,
-			max_tokens: 4096,
-			system: CODING_SYSTEM_PROMPT,
+			max_tokens: 16000,
+			thinking: { type: 'enabled', budget_tokens: 8000 },
+			system: [
+				{
+					type: 'text',
+					text: CODING_SYSTEM_PROMPT,
+					cache_control: { type: 'ephemeral' }
+				}
+			],
 			messages: [{ role: 'user', content: userContent }]
 		});
 
-		const text = response.content[0].type === 'text' ? response.content[0].text : '';
+		// Skip thinking blocks — only capture the final text response.
+		const text = response.content
+			.filter((b) => b.type === 'text')
+			.map((b) => (b.type === 'text' ? b.text : ''))
+			.join('');
 
 		return {
 			role: 'coder',
