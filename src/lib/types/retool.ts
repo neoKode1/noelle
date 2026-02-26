@@ -73,7 +73,7 @@ export const STATUS_CONFIG: Record<JobStatus, { label: string; color: string }> 
 
 /** Pipeline stages shown in the tracker UI. */
 export const PIPELINE_STAGES: JobStatus[] = [
-	'queued', 'cloning', 'customizing', 'building', 'deploying', 'preview_ready'
+	'queued', 'cloning', 'customizing', 'building', 'deploying', 'preview_ready', 'deployed'
 ];
 
 /** Parse a GitHub URL into owner + repo. Returns null if invalid. */

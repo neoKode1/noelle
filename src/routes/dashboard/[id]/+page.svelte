@@ -19,6 +19,7 @@
 
 	const jobId = page.params.id;
 	const IN_PROGRESS_STATUSES = ['queued', 'cloning', 'customizing', 'building', 'deploying'];
+	const TERMINAL_STATUSES = ['deployed', 'failed', 'cancelled'];
 
 	async function fetchJob() {
 		try {
@@ -38,15 +39,24 @@
 
 	onMount(() => {
 		fetchJob();
-		const interval = setInterval(async () => {
-			// Keep polling while queuing (job not yet in DB) or while in-progress.
-			if (!job || IN_PROGRESS_STATUSES.includes(job.status)) {
+		let timer: ReturnType<typeof setTimeout>;
+
+		// Adaptive polling: 2s while building, 15s while waiting for PR merge.
+		// Stops entirely once the job reaches a terminal state.
+		function scheduleNext() {
+			const status = job?.status;
+			if (status && TERMINAL_STATUSES.includes(status)) return; // terminal — stop
+			if (!status && !queuing) return; // error state — stop
+
+			const delay = !status || queuing || IN_PROGRESS_STATUSES.includes(status) ? 2000 : 15000;
+			timer = setTimeout(async () => {
 				await fetchJob();
-			} else {
-				clearInterval(interval);
-			}
-		}, 2000);
-		return () => clearInterval(interval);
+				scheduleNext();
+			}, delay);
+		}
+
+		scheduleNext();
+		return () => clearTimeout(timer);
 	});
 
 	let currentStep = $derived.by(() => {
@@ -193,7 +203,10 @@
 						{#if job.status === 'failed'}
 							<div class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_6px_#ef4444]"></div>
 							<span class="text-[9px] font-mono text-red-400 tracking-widest uppercase font-bold" style="text-shadow: 0 0 4px rgba(239,68,68,0.4);">Build.Failed</span>
-						{:else if job.status === 'preview_ready' || job.status === 'deployed' || job.status === 'approved'}
+						{:else if job.status === 'deployed'}
+							<div class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399,inset_0_1px_1px_rgba(255,255,255,0.8)]"></div>
+							<span class="text-[9px] font-mono text-emerald-400 tracking-widest uppercase font-bold" style="text-shadow: 0 0 4px rgba(52,211,153,0.4);">Sys.Deployed</span>
+						{:else if job.status === 'preview_ready' || job.status === 'approved'}
 							<div class="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_6px_#22c55e,inset_0_1px_1px_rgba(255,255,255,0.8)] animate-pulse"></div>
 							<span class="text-[9px] font-mono text-green-400 tracking-widest uppercase font-bold" style="text-shadow: 0 0 4px rgba(34,197,94,0.4);">Build.Ready</span>
 						{:else}
@@ -203,32 +216,37 @@
 					</div>
 				</div>
 
-				<!-- Steps -->
-				<div class="relative z-10 flex items-start px-4 py-5">
+				<!-- Steps — Gear Chain -->
+				<div class="relative z-10 flex items-end justify-between px-3 sm:px-5 py-5 overflow-x-auto">
 					{#each PIPELINE_STAGES as stage, i}
-						{@const config = STATUS_CONFIG[stage]}
 						{@const done = i < currentStep}
 						{@const active = i === currentStep}
+						{@const gearColor = done ? '#f97316' : active ? '#fdba74' : '#3f3f46'}
+						{@const gearGlow = done ? 'drop-shadow(0 0 5px rgba(249,115,22,0.7))' : active ? 'drop-shadow(0 0 10px rgba(249,115,22,1))' : 'none'}
+						{@const shortLabel = (['QUEUE','CLONE','AI.EDIT','BUILD','PUSH','PR.RDY','LIVE'])[i] ?? stage}
+						{@const spinClass = (done || active) ? (i % 2 === 0 ? 'gear-cw' : 'gear-ccw') : ''}
+						{@const spinDuration = active ? '1.8s' : '5s'}
 
-						<div class="flex-1 flex flex-col items-center text-center min-w-0">
-							<!-- LED indicator knob -->
-							<div class="relative w-9 h-9 rounded-full flex items-center justify-center mb-2" style="background: linear-gradient(145deg, #52525b 0%, #3f3f46 20%, #27272a 100%); box-shadow: 0 6px 12px -3px rgba(0,0,0,0.9), inset 0 2px 2px rgba(255,255,255,0.3), inset 0 -1px 2px rgba(0,0,0,0.8); border: 1px solid #18181b;">
-								{#if done}
-									<div class="w-3 h-3 rounded-full bg-gradient-to-br from-orange-300 to-orange-600" style="box-shadow: 0 0 8px #f97316, inset 0 1px 2px rgba(255,255,255,0.8);"></div>
-								{:else if active}
-									<div class="w-3 h-3 rounded-full bg-gradient-to-br from-orange-300 to-orange-600 animate-pulse" style="box-shadow: 0 0 12px #f97316, inset 0 1px 2px rgba(255,255,255,0.8);"></div>
-								{:else}
-									<div class="w-3 h-3 rounded-full bg-orange-950 border border-black" style="box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);"></div>
+						<div class="flex flex-col items-center text-center shrink-0 px-0.5">
+							<!-- Gear indicator -->
+							<div class="relative flex items-center justify-center mb-2">
+								<div class="origin-center {spinClass}"
+									style="color: {gearColor}; filter: {gearGlow}; animation-duration: {spinDuration};">
+									<Icon icon="ph:gear-six-bold" width="36" height="36" />
+								</div>
+								{#if active}
+									<div class="absolute -inset-1 rounded-full border border-orange-500/40 animate-ping pointer-events-none" style="animation-duration: 2s;"></div>
 								{/if}
 							</div>
-
-							<span class="text-[7px] font-mono text-zinc-600 tracking-widest font-bold mb-0.5">{String(i + 1).padStart(2, '0')}</span>
-							<span class="text-[9px] font-mono uppercase tracking-wider font-bold leading-tight transition-colors {done ? 'text-orange-500' : active ? 'text-orange-300' : 'text-zinc-600'}" style="{done || active ? 'text-shadow: 0 0 4px rgba(249,115,22,0.3);' : ''}">{config.label}</span>
+							<span class="text-[7px] font-mono font-bold text-zinc-700 tracking-widest mb-0.5">{String(i + 1).padStart(2, '0')}</span>
+							<span class="text-[8px] font-mono uppercase tracking-wider font-bold leading-tight {done ? 'text-orange-500' : active ? 'text-orange-300' : 'text-zinc-700'}"
+								style="{done || active ? 'text-shadow: 0 0 4px rgba(249,115,22,0.4);' : ''}">{shortLabel}</span>
 						</div>
 
 						{#if i < PIPELINE_STAGES.length - 1}
-							<div class="flex-shrink-0 self-start mt-[18px] w-4 sm:w-6">
-								<div class="h-[1px] w-full transition-colors {i < currentStep ? 'bg-orange-500/60' : 'bg-zinc-800'}" style="{i < currentStep ? 'box-shadow: 0 0 4px rgba(249,115,22,0.4);' : ''}"></div>
+							<div class="shrink-0 self-center pb-8 flex-1 min-w-[4px] max-w-[20px]">
+								<div class="h-px w-full {i < currentStep ? 'bg-orange-500/40' : 'bg-zinc-800'}"
+									style="{i < currentStep ? 'box-shadow: 0 0 3px rgba(249,115,22,0.5);' : ''}"></div>
 							</div>
 						{/if}
 					{/each}
@@ -323,6 +341,34 @@
 						{/if}
 					{/if}
 
+					<!-- Deployed celebration -->
+					{#if job.status === 'deployed'}
+						<div class="rounded-2xl relative overflow-hidden" style="background: linear-gradient(to bottom, #064e3b 0%, #022c22 40%, #18181b 100%); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.9), inset 0 2px 2px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.8); border: 1px solid #064e3b;">
+							<div class="absolute inset-0 opacity-[0.08] pointer-events-none mix-blend-overlay" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+							<div class="absolute inset-0 opacity-[0.06] pointer-events-none" style="background-image: linear-gradient(rgba(52,211,153,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(52,211,153,0.5) 1px, transparent 1px); background-size: 14px 14px;"></div>
+							<div class="relative z-10 p-8 text-center">
+								<div class="w-14 h-14 mx-auto mb-5 rounded-full flex items-center justify-center" style="background: linear-gradient(145deg, #065f46 0%, #022c22 100%); box-shadow: 0 0 24px rgba(52,211,153,0.4), inset 0 2px 2px rgba(255,255,255,0.2); border: 1px solid #064e3b;">
+									<Icon icon="ph:check-fat-bold" width="24" height="24" class="text-emerald-400" style="filter: drop-shadow(0 0 6px rgba(52,211,153,0.8));" />
+								</div>
+								<span class="block text-[8px] font-mono text-emerald-500/70 tracking-[0.35em] uppercase font-bold mb-2">SYS.COMPLETE // MERGED</span>
+								<h2 class="text-xl font-semibold text-white mb-2" style="text-shadow: 0 0 20px rgba(52,211,153,0.3);">Changes Deployed</h2>
+								<p class="text-sm text-emerald-200/60 mb-6">The PR was merged and your code is live.</p>
+								<div class="flex flex-wrap gap-3 justify-center">
+									{#if job.productionUrl}
+										<a href={job.productionUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-emerald-900 bg-emerald-400 hover:bg-emerald-300 transition-colors" style="box-shadow: 0 0 12px rgba(52,211,153,0.3);">
+											<Icon icon="ph:rocket-launch-bold" width="14" height="14" /> View Production
+										</a>
+									{/if}
+									{#if job.prUrl}
+										<a href={job.prUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-emerald-300 border border-emerald-700/50 hover:border-emerald-500 transition-colors bg-emerald-900/20">
+											<Icon icon="ph:git-merge-bold" width="14" height="14" /> Merged PR
+										</a>
+									{/if}
+								</div>
+							</div>
+						</div>
+					{/if}
+
 					<!-- Refine -->
 					{#if ['preview_ready', 'deployed', 'failed'].includes(job.status)}
 						<div class="glass-panel rounded-xl p-6">
@@ -398,3 +444,17 @@
 </main>
 
 <Footer />
+
+
+<style>
+	@keyframes gear-cw {
+		from { transform: rotate(0deg); }
+		to   { transform: rotate(360deg); }
+	}
+	@keyframes gear-ccw {
+		from { transform: rotate(0deg); }
+		to   { transform: rotate(-360deg); }
+	}
+	.gear-cw  { animation: gear-cw  3s linear infinite; }
+	.gear-ccw { animation: gear-ccw 3s linear infinite; }
+</style>
