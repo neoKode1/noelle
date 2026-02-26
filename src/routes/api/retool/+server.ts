@@ -2,15 +2,15 @@
  * POST /api/retool
  *
  * Accepts a GitHub repo URL + prompt (+ optional image attachments),
- * runs the multi-agent orchestration pipeline (Claude Orchestrator →
- * Gemini Design Agent → Claude Coding Agent), then enqueues the enriched
- * RetoolsDeploymentMessage v1 to the Retools builder queue.
+ * immediately enqueues a RetoolsDeploymentMessage v1 to the builder queue
+ * so the job ID is returned within ~2 seconds. The multi-agent orchestration
+ * pipeline (Claude → Gemini → Claude) runs in the background via
+ * platform.context.waitUntil() and updates the DB record when complete.
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-// Tell Vercel to give this function up to 300 seconds.
-// The 3-step AI pipeline (Claude → Gemini → Claude) needs the runway.
+// Keep a generous max duration for the background orchestration work.
 export const config = { maxDuration: 300 };
 import { parseGitHubUrl } from '$lib/types/retool';
 import type { ImageAttachment } from '$lib/types/orchestration';
@@ -19,7 +19,7 @@ import { getDB } from '$lib/server/db';
 import { sendToQueue } from '$lib/server/queue';
 import { runOrchestration } from '$lib/server/agents/orchestrator';
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDB();
 
 	const body = await request.json();
@@ -77,37 +77,15 @@ export const POST: RequestHandler = async ({ request }) => {
 	// Final fallback (should never happen, but safety net)
 	if (!resolvedBranch) resolvedBranch = 'main';
 
-	// ── Multi-Agent Orchestration ────────────────────────────────
-	// Run the Claude Orchestrator → Gemini Design Agent → Claude Coding Agent pipeline.
-	// The synthesized prompt enriches the builder's instructions.
-	let orchestratedPrompt: string | undefined;
-	let imageAttachments: ImageAttachment[] | undefined;
-
-	try {
-		const images = Array.isArray(screenshots) ? screenshots : [];
-		imageAttachments = images.length > 0 ? images : undefined;
-		// 90-second hard timeout — prevents the function from hanging until Vercel
-		// kills it, while still giving the 3-step AI pipeline enough runway.
-		const orchestration = await Promise.race([
-			runOrchestration(prompt, images),
-			new Promise<never>((_, reject) =>
-				setTimeout(() => reject(new Error('Orchestration timeout after 90s')), 90_000)
-			)
-		]);
-		orchestratedPrompt = orchestration.synthesized;
-		console.info(
-			`[orchestrator] plan: ${orchestration.plan.tasks.map((t) => t.role).join(' → ')}`
-		);
-	} catch (e) {
-		// Orchestration is non-blocking — fall back to raw prompt on error
-		console.warn('[orchestrator] failed, using raw prompt:', e);
-	}
+	const images = Array.isArray(screenshots) ? screenshots : [];
+	const imageAttachments: ImageAttachment[] | undefined = images.length > 0 ? images : undefined;
 
 	// ── Generate IDs ─────────────────────────────────────────────
 	const jobId = `job-${crypto.randomUUID()}`;
 	const now = Date.now();
 
-	// ── Persist job to D1 ────────────────────────────────────────
+	// ── Persist job to D1 immediately ────────────────────────────
+	// This must happen before we return so the dashboard page can load the job.
 	try {
 		// Upsert sentinel anonymous user so FK constraint is always satisfied.
 		await db.prepare(
@@ -128,7 +106,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(500, `Database error: ${e instanceof Error ? e.message : String(e)}`);
 	}
 
-	// ── Build RetoolsDeploymentMessage v1 for builder queue ──────
+	// ── Build base RetoolsDeploymentMessage v1 (raw prompt) ──────
+	// We send this immediately so the queue doesn't wait on orchestration.
 	const deploymentMessage: RetoolsDeploymentMessage = {
 		schema_version: RETOOLS_SCHEMA_VERSION,
 		job_id: jobId,
@@ -137,13 +116,13 @@ export const POST: RequestHandler = async ({ request }) => {
 		branch: resolvedBranch,
 		github_token: githubToken,
 		prompt: prompt,
-		orchestrated_prompt: orchestratedPrompt,
+		orchestrated_prompt: undefined,
 		image_attachments: imageAttachments,
 		user_email: 'noelle@nexartis.com',
 		user_name: 'Noelle AI'
 	};
 
-	// ── Send to builder queue ────────────────────────────────────
+	// ── Send to builder queue immediately ────────────────────────
 	try {
 		await sendToQueue(deploymentMessage);
 	} catch (e) {
@@ -154,6 +133,35 @@ export const POST: RequestHandler = async ({ request }) => {
 			.bind(`Queue error: ${String(e)}`, Date.now(), jobId)
 			.run();
 		throw error(500, 'Failed to enqueue deployment');
+	}
+
+	// ── Run AI orchestration in the background ───────────────────
+	// We fire-and-forget the multi-agent pipeline so it doesn't block the
+	// response. If it produces an aiSummary we store it on the job record
+	// for display in the dashboard detail view.
+	const orchestrationTask = runOrchestration(prompt, images)
+		.then(async (result) => {
+			console.info(
+				`[orchestrator] plan: ${result.plan.tasks.map((t) => t.role).join(' → ')}`
+			);
+			if (result.synthesized) {
+				await db.prepare(
+					`UPDATE retool_jobs SET ai_summary = ?, updated_at = ? WHERE id = ?`
+				)
+					.bind(result.synthesized, Date.now(), jobId)
+					.run();
+			}
+		})
+		.catch((e) => {
+			console.warn('[orchestrator] background task failed:', e);
+		});
+
+	// Use platform.context.waitUntil if available (Cloudflare Pages / Vercel)
+	// so the runtime keeps the function alive until orchestration completes.
+	const ctx = (platform as { context?: { waitUntil?: (p: Promise<unknown>) => void } } | undefined)
+		?.context;
+	if (ctx?.waitUntil) {
+		ctx.waitUntil(orchestrationTask);
 	}
 
 	return json({ id: jobId, status: 'queued' }, { status: 201 });
