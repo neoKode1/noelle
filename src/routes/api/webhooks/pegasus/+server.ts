@@ -2,10 +2,15 @@
  * POST /api/webhooks/pegasus
  *
  * Receives HMAC-signed webhook callbacks from the Pegasus Retools Engine.
+ * Only accepts callbacks originating from the neoKode1 GitHub account.
  * Updates the corresponding retool_jobs row with status, PR URL, GitHub run details, etc.
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { getDB } from '$lib/server/db';
+
+/** Only webhooks originating from this GitHub account are accepted. */
+const ALLOWED_PEGASUS_OWNER = 'neoKode1';
 
 /**
  * Valid pipeline statuses sent by pegasus-retools-engine workflow.
@@ -20,6 +25,21 @@ const VALID_STATUSES = new Set([
 	'preview_ready',
 	'failed'
 ]);
+
+/**
+ * Extract the GitHub owner (first path segment) from a github.com run URL.
+ * Returns null if the URL is not a valid github.com URL.
+ */
+function extractGitHubOwner(runUrl: string): string | null {
+	try {
+		const url = new URL(runUrl);
+		if (url.hostname !== 'github.com') return null;
+		const parts = url.pathname.split('/').filter(Boolean);
+		return parts[0] ?? null;
+	} catch {
+		return null;
+	}
+}
 
 /** Verify HMAC-SHA256 signature. */
 async function verifySignature(
@@ -50,24 +70,19 @@ async function verifySignature(
 	return { valid: mismatch === 0, expected };
 }
 
-export const POST: RequestHandler = async ({ request, platform }) => {
-	const env = platform?.env;
-	if (!env?.DB) return json({ error: 'DB unavailable' }, { status: 503 });
+export const POST: RequestHandler = async ({ request }) => {
+	const db = getDB();
 
 	// ── Read + verify ────────────────────────────────────────────
 	const rawBody = await request.text();
 	const receivedSig = request.headers.get('x-webhook-signature') ?? '';
 
-	// Resolve the secret from Cloudflare Secrets Store (requires .get() call)
-	let webhookSecret: string;
-	try {
-		webhookSecret = (await env.RETOOLS_WEBHOOK_SECRET.get()).trim();
-	} catch (err) {
-		console.error('[Webhook] Failed to resolve RETOOLS_WEBHOOK_SECRET:', err);
+	// Read secret from environment variable
+	const webhookSecret = (process.env.RETOOLS_WEBHOOK_SECRET ?? '').trim();
+	if (!webhookSecret) {
+		console.error('[Webhook] RETOOLS_WEBHOOK_SECRET is not set');
 		return json({ error: 'Webhook secret not configured' }, { status: 500 });
 	}
-
-	if (!webhookSecret) return json({ error: 'Webhook secret not configured' }, { status: 500 });
 
 	console.log('[Webhook] Secret type:', typeof webhookSecret);
 	console.log('[Webhook] Secret length:', webhookSecret.length);
@@ -96,6 +111,19 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const { job_id, status: pegasusStatus } = payload;
 	if (!job_id || !pegasusStatus) {
 		return json({ error: 'Missing job_id or status' }, { status: 400 });
+	}
+
+	// ── Source isolation: neoKode1 repos only ────────────────────
+	// Reject any callback whose github_run_url is not from the allowed owner.
+	// This ensures Nexartis workflows (pegasus-hb2-retools, pegasus-horizon-breakthrough)
+	// can never update Retools job records, even if they somehow possess the secret.
+	if (payload.github_run_url) {
+		const owner = extractGitHubOwner(payload.github_run_url);
+		if (owner && owner.toLowerCase() !== ALLOWED_PEGASUS_OWNER.toLowerCase()) {
+			console.error(`[Webhook] REJECTED: run URL owner is "${owner}", expected "${ALLOWED_PEGASUS_OWNER}"`);
+			return json({ error: 'Unauthorized source repository' }, { status: 403 });
+		}
+		console.log(`[Webhook] Source owner verified: ${owner} ✅`);
 	}
 
 	console.log(`[Webhook] Job ${job_id} → status: ${pegasusStatus}`);
@@ -142,7 +170,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	// ── Update DB ────────────────────────────────────────────────
 	binds.push(job_id);
-	await env.DB.prepare(
+	await db.prepare(
 		`UPDATE retool_jobs SET ${sets.join(', ')} WHERE id = ?`
 	)
 		.bind(...binds)

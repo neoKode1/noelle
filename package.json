@@ -28,7 +28,7 @@
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-cloudflare": "^7.0.5",
+		"@sveltejs/adapter-vercel": "^6.3.3",
 		"@sveltejs/kit": "^2.50.2",
 		"@sveltejs/vite-plugin-svelte": "^6.0.0",
 		"@types/node": "^24.0.0",
@@ -42,11 +42,11 @@
 		"tailwindcss": "^3.4.17",
 		"typescript": "^5.8.3",
 		"vite": "^7.0.4",
-		"vitest": "^4.0.18",
-		"wrangler": "^4.62.0"
+		"vitest": "^4.0.18"
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.72.0",
+		"@libsql/client": "^0.17.0",
 		"drizzle-orm": "^0.45.0",
 		"lucide-svelte": "^0.563.0",
 		"nanoid": "^5.1.0",
@@ -64,4 +64,3 @@
 		}
 	}
 }
-

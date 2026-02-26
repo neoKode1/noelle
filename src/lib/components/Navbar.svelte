@@ -14,6 +14,8 @@
 		<div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
 			<a href="/#how-it-works" class="hover:text-white transition-colors">How It Works</a>
 			<a href="/#use-cases" class="hover:text-white transition-colors">Use Cases</a>
+			<a href="/mcp" class="hover:text-white transition-colors">MCP Servers</a>
+			<a href="/agents/new" class="hover:text-white transition-colors">Build Agent</a>
 			<a href="/dashboard" class="hover:text-white transition-colors">Dashboard</a>
 		</div>
 
@@ -42,6 +44,8 @@
 		<div class="md:hidden border-t border-white/5 bg-[#030304]/95 backdrop-blur-md p-4 space-y-3">
 			<a href="/#how-it-works" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>How It Works</a>
 			<a href="/#use-cases" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>Use Cases</a>
+			<a href="/mcp" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>MCP Servers</a>
+			<a href="/agents/new" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>Build Agent</a>
 			<a href="/dashboard" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>Dashboard</a>
 			<hr class="border-white/5" />
 			<a href="/auth" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors">Sign In</a>

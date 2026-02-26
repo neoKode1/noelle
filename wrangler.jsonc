@@ -129,6 +129,10 @@
 					"secret_name": "RETOOLS_WEBHOOK_SECRET"
 				}
 			],
+			// Cloudflare Workers AI
+			"ai": {
+				"binding": "AI"
+			},
 			"vars": {
 				"ENVIRONMENT": "feature",
 				"NODE_ENV": "development",
@@ -185,6 +189,10 @@
 					"secret_name": "RETOOLS_WEBHOOK_SECRET"
 				}
 			],
+			// Cloudflare Workers AI
+			"ai": {
+				"binding": "AI"
+			},
 			"vars": {
 				"ENVIRONMENT": "development",
 				"NODE_ENV": "development",
@@ -245,6 +253,10 @@
 					"secret_name": "RETOOLS_WEBHOOK_SECRET"
 				}
 			],
+			// Cloudflare Workers AI
+			"ai": {
+				"binding": "AI"
+			},
 			"vars": {
 				"ENVIRONMENT": "production",
 				"NODE_ENV": "production",
@@ -258,6 +270,19 @@
 				"LOG_ENABLE_ANALYTICS_ENGINE": "true"
 			}
 		}
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "retools-db-prod",
+			"database_id": "PROD_DB_ID_PLACEHOLDER",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "ASSETS_BUCKET",
+			"bucket_name": "retools-assets-prod"
+		}
+	]
 }
-
