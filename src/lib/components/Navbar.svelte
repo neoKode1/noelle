@@ -3,7 +3,7 @@
 	let mobileOpen = $state(false);
 </script>
 
-<nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-[#030304]/90 backdrop-blur-md transition-all duration-300">
+<nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-transparent transition-all duration-300">
 	<div class="container-wide flex items-center justify-between h-16">
 		<!-- Logo -->
 		<a href="/" class="flex items-center group">
@@ -39,7 +39,7 @@
 
 	<!-- Mobile menu -->
 	{#if mobileOpen}
-		<div class="md:hidden border-t border-white/5 bg-[#030304]/95 backdrop-blur-md p-4 space-y-3">
+		<div class="md:hidden border-t border-white/5 bg-transparent p-4 space-y-3">
 			<a href="/#how-it-works" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>How It Works</a>
 			<a href="/#use-cases" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>Use Cases</a>
 			<a href="/mcp" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>MCP Servers</a>
