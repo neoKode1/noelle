@@ -1,32 +1,63 @@
 /**
- * Database client — Vercel / Turso (libSQL)
+ * Database client — Cloudflare D1 HTTP API
  *
- * Wraps @libsql/client in a thin API that mirrors Cloudflare D1's
+ * Keeps using your existing Cloudflare D1 database from Vercel via the
+ * Cloudflare REST API. No data migration, no new service.
+ *
+ * Mirrors the D1 interface used throughout the app:
  *   .prepare(sql).bind(...args).first<T>()
  *   .prepare(sql).bind(...args).all<T>()   → { results: T[] }
  *   .prepare(sql).bind(...args).run()
  *
- * Configure via environment variables:
- *   TURSO_DATABASE_URL   — e.g. libsql://your-db.turso.io  (or file:local.db for local dev)
- *   TURSO_AUTH_TOKEN     — Turso auth token (omit for local file DBs)
+ * Required environment variables (see .env.local):
+ *   CLOUDFLARE_ACCOUNT_ID    — your CF account ID
+ *   CLOUDFLARE_D1_DATABASE_ID — the D1 database ID
+ *   CLOUDFLARE_API_TOKEN     — CF API token with D1 Edit permission
  */
 
-import { createClient, type Client, type InValue } from '@libsql/client';
+interface D1HttpResult<T> {
+	results: T[];
+	success: boolean;
+	meta: Record<string, unknown>;
+}
 
-let _client: Client | null = null;
+interface D1HttpResponse<T> {
+	result: D1HttpResult<T>[];
+	success: boolean;
+	errors: { code: number; message: string }[];
+}
 
-function getClient(): Client {
-	if (_client) return _client;
+async function queryD1<T = Record<string, unknown>>(
+	sql: string,
+	params: unknown[]
+): Promise<D1HttpResult<T>> {
+	const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+	const databaseId = process.env.CLOUDFLARE_D1_DATABASE_ID;
+	const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 
-	const url = process.env.TURSO_DATABASE_URL;
-	if (!url) throw new Error('TURSO_DATABASE_URL environment variable is not set');
+	if (!accountId) throw new Error('CLOUDFLARE_ACCOUNT_ID is not set');
+	if (!databaseId) throw new Error('CLOUDFLARE_D1_DATABASE_ID is not set');
+	if (!apiToken) throw new Error('CLOUDFLARE_API_TOKEN is not set');
 
-	_client = createClient({
-		url,
-		authToken: process.env.TURSO_AUTH_TOKEN
+	const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`;
+
+	const res = await fetch(url, {
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${apiToken}`,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ sql, params })
 	});
 
-	return _client;
+	const body = (await res.json()) as D1HttpResponse<T>;
+
+	if (!res.ok || !body.success) {
+		const msg = body.errors?.map((e) => e.message).join(', ') ?? res.statusText;
+		throw new Error(`D1 query failed: ${msg}`);
+	}
+
+	return body.result[0];
 }
 
 interface BoundStatement {
@@ -42,35 +73,17 @@ interface PreparedStatement {
 function prepare(sql: string): PreparedStatement {
 	return {
 		bind(...args: unknown[]): BoundStatement {
-			const client = getClient();
-			const libArgs = args as InValue[];
-
 			return {
 				async first<T = Record<string, unknown>>(): Promise<T | null> {
-					const result = await client.execute({ sql, args: libArgs });
-					if (!result.rows.length) return null;
-					// libSQL rows are arrays; convert to named object using result.columns
-					const row: Record<string, unknown> = {};
-					result.columns.forEach((col, i) => {
-						row[col] = result.rows[0][i];
-					});
-					return row as T;
+					const result = await queryD1<T>(sql, args);
+					return result.results[0] ?? null;
 				},
-
 				async all<T = Record<string, unknown>>(): Promise<{ results: T[] }> {
-					const result = await client.execute({ sql, args: libArgs });
-					const results = result.rows.map((r) => {
-						const row: Record<string, unknown> = {};
-						result.columns.forEach((col, i) => {
-							row[col] = r[i];
-						});
-						return row as T;
-					});
-					return { results };
+					const result = await queryD1<T>(sql, args);
+					return { results: result.results };
 				},
-
 				async run(): Promise<void> {
-					await client.execute({ sql, args: libArgs });
+					await queryD1(sql, args);
 				}
 			};
 		}
