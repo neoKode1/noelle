@@ -13,6 +13,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { nanoid } from 'nanoid';
 import { listTemplates } from '$lib/data/agent-templates';
 import type { ChatMessage, ExtractedRequirements, AgentRecommendation } from '$lib/types/agent';
+import type { ImageAttachment } from '$lib/types/orchestration';
 import type { getDB } from '$lib/server/db';
 
 type DB = ReturnType<typeof getDB>;
@@ -134,7 +135,8 @@ async function upsertSession(
 export async function processWizardMessage(
 	db: DB,
 	userMessage: string,
-	sessionId?: string
+	sessionId?: string,
+	screenshots?: ImageAttachment[]
 ): Promise<WizardChatResponse> {
 	const sid = sessionId ?? nanoid();
 
@@ -148,20 +150,52 @@ export async function processWizardMessage(
 		? JSON.parse(existing.recommendation)
 		: null;
 
-	// Append user turn
-	messages.push({ role: 'user', content: userMessage, timestamp: new Date().toISOString() });
+	// Append user turn (store text only — base64 images are not persisted to D1)
+	const storedContent = screenshots?.length
+		? `${userMessage}\n[User attached ${screenshots.length} reference image${screenshots.length > 1 ? 's' : ''} for the Gemini Design Agent.]`
+		: userMessage;
+	messages.push({ role: 'user', content: storedContent, timestamp: new Date().toISOString() });
 
-	// Build messages array for Anthropic
-	const aiMessages: { role: 'user' | 'assistant'; content: string }[] = messages.map((m) => ({
-		role: m.role as 'user' | 'assistant',
-		content: m.content
-	}));
+	// Build prior history as text-only messages (images are only in the current turn)
+	const priorMessages: { role: 'user' | 'assistant'; content: string }[] = messages
+		.slice(0, -1)
+		.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+	// Build the current user turn — include vision content if images are attached
+	type AnthropicContent = Anthropic.TextBlockParam | Anthropic.ImageBlockParam;
+	type AnthropicMessage = { role: 'user' | 'assistant'; content: string | AnthropicContent[] };
+
+	let currentContent: string | AnthropicContent[];
+	if (screenshots?.length) {
+		const imageBlocks: AnthropicContent[] = screenshots.map((img) => ({
+			type: 'image' as const,
+			source: {
+				type: 'base64' as const,
+				media_type: img.mimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+				data: img.data
+			}
+		}));
+		currentContent = [
+			...imageBlocks,
+			{
+				type: 'text' as const,
+				text: userMessage || 'I have attached reference images. Please acknowledge them and ask your next clarifying question about what I want to build.'
+			}
+		];
+	} else {
+		currentContent = userMessage;
+	}
+
+	const aiMessages: AnthropicMessage[] = [
+		...priorMessages,
+		{ role: 'user', content: currentContent }
+	];
 
 	// Call Claude Orchestrator (model configurable via env)
 	const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 	const aiResponse = await anthropic.messages.create({
 		model: process.env.ORCHESTRATOR_MODEL ?? 'claude-opus-4-5',
-		max_tokens: 800,
+		max_tokens: 1500,
 		system: buildSystemPrompt(),
 		messages: aiMessages
 	});

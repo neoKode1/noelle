@@ -1,16 +1,20 @@
 <script lang="ts">
 	import type { WizardChatResponse } from '$lib/server/wizard-orchestrator';
 	import type { ChatMessage, ExtractedRequirements, AgentRecommendation } from '$lib/types/agent';
+	import type { ImageAttachment } from '$lib/types/retool';
 
 	// ── State ────────────────────────────────────────────────────────────────────
 	let sessionId = $state<string | null>(null);
 	let messages = $state<ChatMessage[]>([]);
 	let requirements = $state<ExtractedRequirements | null>(null);
 	let recommendation = $state<AgentRecommendation | null>(null);
-	// readyToGenerate drives the CTA button in the right panel (via recommendation.ready_to_generate)
 	let inputText = $state('');
 	let loading = $state(false);
 	let error = $state<string | null>(null);
+	let screenshots = $state<ImageAttachment[]>([]);
+	let fileInput: HTMLInputElement;
+
+	const MAX_FILE_SIZE_MB = 20;
 
 	// Boot message shown before first user turn
 	const WELCOME: ChatMessage = {
@@ -21,23 +25,72 @@
 
 	let displayMessages = $derived<ChatMessage[]>([WELCOME, ...messages]);
 
+	// ── File helpers ─────────────────────────────────────────────────────────────
+	async function fileToAttachment(file: File): Promise<ImageAttachment | null> {
+		if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+			error = `${file.name} exceeds the ${MAX_FILE_SIZE_MB} MB limit.`;
+			return null;
+		}
+		if (!file.type.startsWith('image/')) {
+			error = `${file.name} is not an image file.`;
+			return null;
+		}
+		return new Promise((resolve) => {
+			const reader = new FileReader();
+			reader.onload = () => {
+				const dataUrl = reader.result as string;
+				resolve({ name: file.name, mimeType: file.type, data: dataUrl.split(',')[1] });
+			};
+			reader.readAsDataURL(file);
+		});
+	}
+
+	async function handleFiles(files: FileList | File[]) {
+		error = null;
+		const results = await Promise.all(Array.from(files).map(fileToAttachment));
+		screenshots = [...screenshots, ...results.filter((r): r is ImageAttachment => r !== null)];
+	}
+
+	function handleFileInput(e: Event) {
+		const input = e.target as HTMLInputElement;
+		if (input.files) handleFiles(input.files);
+		input.value = '';
+	}
+
+	function handlePaste(e: ClipboardEvent) {
+		const imageFiles: File[] = [];
+		for (const item of Array.from(e.clipboardData?.items ?? [])) {
+			if (item.kind === 'file' && item.type.startsWith('image/')) {
+				const file = item.getAsFile();
+				if (file) imageFiles.push(file);
+			}
+		}
+		if (imageFiles.length) handleFiles(imageFiles);
+	}
+
+	function removeScreenshot(index: number) {
+		screenshots = screenshots.filter((_, i) => i !== index);
+	}
+
 	// ── Chat submit ──────────────────────────────────────────────────────────────
 	async function send() {
 		const text = inputText.trim();
-		if (!text || loading) return;
+		if ((!text && screenshots.length === 0) || loading) return;
 
+		const sentScreenshots = [...screenshots];
 		inputText = '';
+		screenshots = [];
 		error = null;
 		loading = true;
 
 		// Optimistically add user message
-		messages = [...messages, { role: 'user', content: text, timestamp: new Date().toISOString() }];
+		messages = [...messages, { role: 'user', content: text || `[${sentScreenshots.length} image${sentScreenshots.length > 1 ? 's' : ''} attached]`, timestamp: new Date().toISOString() }];
 
 		try {
 			const res = await fetch('/api/wizard/chat', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ message: text, session_id: sessionId })
+				body: JSON.stringify({ message: text || 'I have attached some reference images.', session_id: sessionId, screenshots: sentScreenshots })
 			});
 
 			if (!res.ok) {
@@ -50,16 +103,15 @@
 			requirements = data.requirements;
 			recommendation = data.recommendation;
 
-			// Replace last optimistic user msg + add assistant reply (server has timestamps)
 			messages = [
 				...messages.slice(0, -1),
-				{ role: 'user', content: text, timestamp: new Date().toISOString() },
+				{ role: 'user', content: text || `[${sentScreenshots.length} image${sentScreenshots.length > 1 ? 's' : ''} attached]`, timestamp: new Date().toISOString() },
 				{ role: 'assistant', content: data.reply, timestamp: new Date().toISOString() }
 			];
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Something went wrong';
-			// Remove optimistic message on error
 			messages = messages.slice(0, -1);
+			screenshots = sentScreenshots; // restore on error
 		} finally {
 			loading = false;
 		}
@@ -134,25 +186,81 @@
 
 			<!-- Input -->
 			<div class="border-t border-white/5 p-4">
-				<div class="flex gap-3 items-end">
+
+				<!-- Screenshot thumbnails -->
+				{#if screenshots.length > 0}
+					<div class="flex flex-wrap gap-2 mb-3">
+						{#each screenshots as img, i}
+							<div class="relative group w-14 h-14 rounded-lg overflow-hidden border border-white/10 shrink-0">
+								<img
+									src="data:{img.mimeType};base64,{img.data}"
+									alt={img.name}
+									class="w-full h-full object-cover"
+								/>
+								<button
+									type="button"
+									onclick={() => removeScreenshot(i)}
+									title="Remove {img.name}"
+									class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+								>
+									<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+								</button>
+							</div>
+						{/each}
+						<p class="self-end text-[10px] text-brand-400 pb-1">
+							{screenshots.length} image{screenshots.length > 1 ? 's' : ''} · Gemini will analyze {screenshots.length > 1 ? 'them' : 'it'}
+						</p>
+					</div>
+				{/if}
+
+				<!-- Input row -->
+				<div class="flex gap-2 items-end">
+					<!-- Paperclip button -->
+					<button
+						type="button"
+						title="Attach images (up to {MAX_FILE_SIZE_MB} MB each)"
+						onclick={() => fileInput.click()}
+						disabled={loading}
+						class="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-brand-400 hover:bg-brand-500/10 border border-white/8 transition-colors disabled:opacity-40 shrink-0"
+					>
+						<!-- paperclip icon -->
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+								d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+						</svg>
+					</button>
+
 					<textarea
 						bind:value={inputText}
 						onkeydown={handleKey}
+						onpaste={handlePaste}
 						placeholder="Describe the agent you want to build…"
 						rows="2"
 						disabled={loading}
 						class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 resize-none focus:outline-none focus:border-brand-500/50 transition-colors disabled:opacity-50"
 					></textarea>
+
 					<button
 						onclick={send}
-						disabled={loading || !inputText.trim()}
+						disabled={loading || (!inputText.trim() && screenshots.length === 0)}
 						aria-label="Send message"
 						class="w-10 h-10 bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-all shrink-0"
 					>
 						<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7"/></svg>
 					</button>
 				</div>
-				<p class="text-[10px] text-slate-600 mt-2 px-1">Press Enter to send · Shift+Enter for new line</p>
+
+				<!-- Hidden file input -->
+				<input
+					bind:this={fileInput}
+					type="file"
+					accept="image/*"
+					multiple
+					class="hidden"
+					onchange={handleFileInput}
+				/>
+
+				<p class="text-[10px] text-slate-600 mt-2 px-1">Press Enter to send · Shift+Enter for new line · Paste or 📎 to attach images</p>
 			</div>
 		</div>
 
