@@ -22,7 +22,10 @@ export interface RetoolJob {
 	branch: string;
 	prompt: string;
 	status: JobStatus;
+	/** Live hosted preview URL (Vercel/Netlify/etc.) — shown as iframe in dashboard */
 	previewUrl: string | null;
+	/** GitHub Pull Request link — shown as "View PR" button */
+	prUrl: string | null;
 	productionUrl: string | null;
 	deploymentId: string | null;
 	githubRunId: string | null;

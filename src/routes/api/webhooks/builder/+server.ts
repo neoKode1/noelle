@@ -135,9 +135,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		binds.push(builderStatus);
 	}
 
+	// Store PR link in the dedicated pr_url column
 	if (payload.pr_url) {
-		sets.push('preview_url = ?');
+		sets.push('pr_url = ?');
 		binds.push(payload.pr_url);
+	}
+
+	// Store real live preview URL (Vercel/Netlify/etc.) in preview_url
+	if (payload.preview_url) {
+		sets.push('preview_url = ?');
+		binds.push(payload.preview_url);
 	}
 
 	if (payload.github_run_id) {

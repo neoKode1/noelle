@@ -32,7 +32,8 @@ export const retoolJobs = sqliteTable('retool_jobs', {
 	// queued | cloning | customizing | building | deploying
 	// | preview_ready | approved | deployed | failed | cancelled
 
-	previewUrl: text('preview_url'),
+	previewUrl: text('preview_url'), // Live hosted preview URL (Vercel/Netlify/etc.)
+	prUrl: text('pr_url'),           // GitHub Pull Request link
 	productionUrl: text('production_url'),
 	deploymentId: text('deployment_id'), // Builder engine deployment_id
 	githubRunId: text('github_run_id'), // GitHub Actions run ID

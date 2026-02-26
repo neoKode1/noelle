@@ -58,3 +58,32 @@ export interface RetoolsDeploymentMessage {
 	orchestrated_prompt?: string;
 }
 
+/**
+ * Builder Webhook Callback Payload
+ *
+ * Sent by the retools-engine GitHub Actions workflow to /api/webhooks/builder
+ * as the job progresses through pipeline stages.
+ */
+export interface BuilderWebhookPayload {
+	job_id: string;
+	status: 'queued' | 'cloning' | 'customizing' | 'building' | 'deploying' | 'preview_ready' | 'failed';
+
+	/** GitHub Pull Request URL for the AI-generated changes. */
+	pr_url?: string;
+
+	/**
+	 * Live hosted preview URL (Vercel/Netlify/etc.) for the deployed PR branch.
+	 * Set when the deployment platform auto-generates a preview for the PR.
+	 */
+	preview_url?: string;
+
+	/** GitHub Actions run ID for the builder workflow. */
+	github_run_id?: string | number;
+
+	/** Link to the GitHub Actions run (used for "Build Log" button). */
+	github_run_url?: string;
+
+	/** Error or status message (used on failure). */
+	message?: string;
+}
+

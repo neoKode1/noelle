@@ -12,6 +12,7 @@ export function mapJobRow(r: Record<string, unknown>) {
 		prompt: r.prompt,
 		status: r.status,
 		previewUrl: r.preview_url,
+		prUrl: r.pr_url,
 		productionUrl: r.production_url,
 		deploymentId: r.deployment_id,
 		githubRunId: r.github_run_id,

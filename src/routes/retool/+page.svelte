@@ -103,7 +103,7 @@
 	<!-- Background accent -->
 	<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] hero-glow pointer-events-none opacity-30"></div>
 
-	<div class="relative container-narrow py-16 sm:py-24">
+	<div class="relative container-content py-16 sm:py-24">
 		<!-- Header -->
 		<div class="text-center mb-10">
 			<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-500/30 bg-brand-500/10 text-brand-300 text-[11px] font-medium mb-5">
@@ -119,8 +119,85 @@
 			</p>
 		</div>
 
+		<!-- Two-column layout: notes sidebar + form -->
+		<div class="flex flex-col lg:flex-row gap-8 items-start justify-center">
+
+			<!-- ── Requirements Sidebar ── -->
+			<aside class="lg:sticky lg:top-24 w-full lg:w-64 shrink-0">
+				<div class="relative p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+					<!-- Decorative corner accent -->
+					<div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500/30 rounded-tl-2xl pointer-events-none"></div>
+					<div class="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-brand-500/20 rounded-br-2xl pointer-events-none"></div>
+
+					<p class="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-4">Before you begin</p>
+
+					<div class="space-y-4" style="font-family: 'Dancing Script', cursive;">
+						<!-- Repo visibility -->
+						<div>
+							<p class="text-[15px] font-semibold text-slate-300 leading-snug mb-1">Public or Private?</p>
+							<p class="text-[13px] text-slate-500 leading-relaxed">
+								Both work — as long as your token has access. Public repos need <span class="font-semibold text-slate-400">public_repo</span> scope; private repos need the full <span class="font-semibold text-slate-400">repo</span> scope.
+							</p>
+						</div>
+
+						<div class="border-t border-white/[0.05]"></div>
+
+						<!-- Token scopes -->
+						<div>
+							<p class="text-[15px] font-semibold text-slate-300 leading-snug mb-1">Token Permissions</p>
+							<p class="text-[13px] text-slate-500 leading-relaxed">
+								Your PAT needs at minimum the <span class="font-semibold text-slate-400">repo</span> scope — this covers cloning, creating a branch, pushing commits, and opening a PR on your behalf.
+							</p>
+						</div>
+
+						<div class="border-t border-white/[0.05]"></div>
+
+						<!-- Branch protection -->
+						<div>
+							<p class="text-[15px] font-semibold text-slate-300 leading-snug mb-1">Branch Rules</p>
+							<p class="text-[13px] text-slate-500 leading-relaxed">
+								Noelle always opens a <span class="font-semibold text-slate-400">new branch</span> and a PR — it never pushes directly to main. Branch protection rules on main are perfectly fine.
+							</p>
+						</div>
+
+						<div class="border-t border-white/[0.05]"></div>
+
+						<!-- PR requirements -->
+						<div>
+							<p class="text-[15px] font-semibold text-slate-300 leading-snug mb-1">PR Write Access</p>
+							<p class="text-[13px] text-slate-500 leading-relaxed">
+								The token must belong to an account with <span class="font-semibold text-slate-400">write</span> (or higher) access to the repo so it can push the branch and open the pull request.
+							</p>
+						</div>
+
+						<div class="border-t border-white/[0.05]"></div>
+
+						<!-- Security note -->
+						<div>
+							<p class="text-[15px] font-semibold text-slate-300 leading-snug mb-1">Your Token is Safe</p>
+							<p class="text-[13px] text-slate-500 leading-relaxed">
+								Tokens are used only for this single operation and are <span class="font-semibold text-slate-400">never stored</span>. Use a fine-grained PAT with an expiry for extra peace of mind.
+							</p>
+						</div>
+					</div>
+
+					<!-- Bottom tip -->
+					<div class="mt-5 pt-4 border-t border-white/[0.05]">
+						<a
+							href="https://github.com/settings/tokens/new?scopes=repo&description=Noelle+AI"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="text-[13px] text-brand-400 hover:text-brand-300 transition-colors"
+							style="font-family: 'Dancing Script', cursive;"
+						>
+							→ Generate a token now
+						</a>
+					</div>
+				</div>
+			</aside>
+
 		<!-- Form card -->
-		<div class="glass-panel rounded-2xl p-8 max-w-2xl mx-auto">
+		<div class="glass-panel rounded-2xl p-8 w-full max-w-2xl">
 			<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-5">
 				<!-- Repo URL -->
 				<div>
@@ -271,7 +348,8 @@
 				</div>
 			</div>
 		</div>
-	</div>
+		</div><!-- end flex row -->
+	</div><!-- end container-content -->
 </main>
 
 <Footer />
