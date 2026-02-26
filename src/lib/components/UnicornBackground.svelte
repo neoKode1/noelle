@@ -38,7 +38,7 @@
 	aria-hidden="true"
 >
 	<!-- 1. Scene -->
-	<div class="unicorn-scene" style="opacity: 0.5;">
+	<div class="unicorn-scene" style="opacity: 1;">
 		<div
 			data-us-project="ILgOO23w4wEyPQOKyLO4"
 			class="absolute inset-0"
@@ -70,17 +70,15 @@
 		inset: 0;
 	}
 
-	/* Blend: 50% near-black base + soft indigo/navy tint */
+	/* Blend: light tint only — let the scene breathe */
 	.unicorn-blend {
 		position: absolute;
 		inset: 0;
 		background:
 			/* Nexartis navy top-left glow */
-			radial-gradient(ellipse 60% 50% at 20% 10%, rgba(10, 18, 69, 0.55) 0%, transparent 70%),
+			radial-gradient(ellipse 60% 50% at 20% 10%, rgba(10, 18, 69, 0.25) 0%, transparent 70%),
 			/* Indigo brand mid-centre glow */
-			radial-gradient(ellipse 50% 40% at 70% 40%, rgba(99, 102, 241, 0.18) 0%, transparent 65%),
-			/* Base dark wash */
-			rgba(3, 3, 4, 0.50);
+			radial-gradient(ellipse 50% 40% at 70% 40%, rgba(99, 102, 241, 0.10) 0%, transparent 65%);
 	}
 
 	/* Fade the scene out at the bottom so sections blend seamlessly */
