@@ -3,7 +3,7 @@
 	let mobileOpen = $state(false);
 </script>
 
-<nav class="fixed top-0 w-full z-50 border-b border-transparent bg-transparent transition-all duration-300">
+<nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-[#030304]/90 backdrop-blur-md transition-all duration-300">
 	<div class="container-wide flex items-center justify-between h-16">
 		<!-- Logo -->
 		<a href="/" class="flex items-center group">
