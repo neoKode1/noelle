@@ -2,12 +2,11 @@
 	let mobileOpen = $state(false);
 </script>
 
-<nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-[#030304]/80 backdrop-blur-md transition-all duration-300">
+<nav class="fixed top-0 w-full z-50 border-b border-transparent bg-transparent transition-all duration-300">
 	<div class="container-wide flex items-center justify-between h-16">
 		<!-- Logo -->
-		<a href="/" class="flex items-center gap-2 group">
-			<div class="w-6 h-6 rounded bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-semibold tracking-tighter">N</div>
-			<span class="text-white font-medium tracking-tight text-sm group-hover:opacity-80 transition-opacity uppercase">Noelle</span>
+		<a href="/" class="flex items-center group">
+			<span class="text-white font-medium tracking-tight text-[1.75rem] group-hover:opacity-80 transition-opacity lowercase">noelle</span>
 		</a>
 
 		<!-- Desktop links -->
