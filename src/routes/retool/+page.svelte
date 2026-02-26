@@ -113,7 +113,7 @@
 				</span>
 				AI-Powered · PR Mode Only
 			</div>
-			<h1 class="text-4xl font-medium text-white tracking-tight mb-3">Retool Your Site</h1>
+			<h1 class="text-4xl font-medium text-white tracking-tight mb-3">Build with Noelle</h1>
 			<p class="text-slate-400 max-w-lg mx-auto text-sm leading-relaxed">
 				Paste your GitHub repo, describe what you want changed, and we'll open a PR with the AI-generated results.
 			</p>
@@ -243,7 +243,7 @@
 					/>
 					<p class="text-xs text-slate-600 mt-1.5">
 						Needs <code class="text-slate-400 bg-white/5 px-1 rounded text-[11px]">repo</code> scope. Used only to push a branch and open a PR — never stored.
-						<a href="https://github.com/settings/tokens/new?scopes=repo&description=Retools" target="_blank" rel="noopener noreferrer" class="text-brand-400 hover:text-brand-300 underline underline-offset-2 ml-1">Create token →</a>
+						<a href="https://github.com/settings/tokens/new?scopes=repo&description=Noelle" target="_blank" rel="noopener noreferrer" class="text-brand-400 hover:text-brand-300 underline underline-offset-2 ml-1">Create token →</a>
 					</p>
 				</div>
 
@@ -329,7 +329,7 @@
 					{#if submitting}
 						<Icon icon="ph:spinner-bold" width="16" height="16" class="animate-spin" /> Dispatching build…
 					{:else}
-						<Icon icon="ph:paper-plane-right-bold" width="16" height="16" /> Retool My Site
+						<Icon icon="ph:paper-plane-right-bold" width="16" height="16" /> Build with Noelle
 					{/if}
 				</button>
 			</form>

@@ -36,7 +36,7 @@
 				</div>
 
 				<h1 class="reveal delay-100 text-5xl md:text-7xl font-medium tracking-tight mb-6 leading-[1.1] title-gradient">
-					Retool Your Website<br>with AI.
+					Try Noelle.<br>AI That Codes for You.
 				</h1>
 
 				<p class="reveal delay-200 text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed font-light">
@@ -87,7 +87,7 @@
 
 							<!-- Core node -->
 							<div class="relative w-full max-w-2xl bg-[#0F0F11] border border-white/10 rounded-xl p-5 shadow-2xl">
-								<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-brand-600 rounded-full text-[10px] text-white border border-brand-400 font-medium tracking-wide shadow-lg shadow-brand-500/30">RETOOLS AI CORE</div>
+								<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-brand-600 rounded-full text-[10px] text-white border border-brand-400 font-medium tracking-wide shadow-lg shadow-brand-500/30">NOELLE AI CORE</div>
 								<div class="grid grid-cols-3 gap-4 mt-2">
 									<div class="bg-white/5 rounded-lg p-3 border border-white/5">
 										<div class="text-[10px] text-slate-400 uppercase tracking-wider mb-2">Cloning</div>
@@ -150,7 +150,7 @@
 	<!-- ═══ USE CASES ═══ -->
 	<section id="use-cases" class="py-24 bg-white/[0.01]">
 		<div class="container-wide">
-			<h2 class="text-3xl font-medium text-white mb-12 tracking-tight reveal">What Can You Retool?</h2>
+			<h2 class="text-3xl font-medium text-white mb-12 tracking-tight reveal">What Can Noelle Do?</h2>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				{#each [
 					{ icon: 'ph:paint-brush-bold', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20', title: 'Visual Overhauls', desc: 'Update colors, typography, layouts, or make your site mobile-friendly with a single prompt.' },
@@ -244,7 +244,7 @@
 		<div class="absolute bottom-0 left-0 w-64 h-64 bg-brand-600/10 blur-[100px] pointer-events-none"></div>
 		<div class="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 blur-[100px] pointer-events-none"></div>
 		<div class="container-narrow text-center relative z-10 reveal">
-			<h2 class="text-4xl md:text-5xl font-medium text-white tracking-tight mb-6">Ready to Retool?</h2>
+			<h2 class="text-4xl md:text-5xl font-medium text-white tracking-tight mb-6">Ready to Try Noelle?</h2>
 			<p class="text-slate-400 max-w-2xl mx-auto mb-10">
 				Paste your repo, describe the changes, and get a live PR in minutes. No deployments, no risk — just a pull request.
 			</p>
