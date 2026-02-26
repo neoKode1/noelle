@@ -9,18 +9,15 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { processWizardMessage } from '$lib/server/wizard-orchestrator';
+import { getDB } from '$lib/server/db';
 
 interface ChatRequestBody {
 	message: string;
 	session_id?: string;
 }
 
-export const POST: RequestHandler = async ({ request, platform }) => {
-	const ai = platform?.env?.AI;
-	const db = platform?.env?.DB;
-
-	if (!ai) throw error(503, 'AI binding not available');
-	if (!db) throw error(503, 'DB binding not available');
+export const POST: RequestHandler = async ({ request }) => {
+	const db = getDB();
 
 	let body: ChatRequestBody;
 	try {
@@ -32,7 +29,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const { message, session_id } = body;
 	if (!message?.trim()) throw error(400, 'message is required');
 
-	const result = await processWizardMessage(ai, db, message.trim(), session_id);
+	const result = await processWizardMessage(db, message.trim(), session_id);
 
 	return json(result, {
 		headers: { 'Cache-Control': 'no-store' }

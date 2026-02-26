@@ -14,35 +14,7 @@ declare global {
 		}
 		// interface PageData {}
 		// interface PageState {}
-		interface Platform {
-			env: {
-				ENVIRONMENT: string;
-				NODE_ENV: string;
-				CONTACT_EMAIL_TO: string;
-				FROM_EMAIL: string;
-				VITE_BASE_URL?: string;
-				// D1 Database
-				DB: D1Database;
-				// R2 Asset Storage
-				ASSETS_BUCKET: R2Bucket;
-				// HMAC secret for verifying Pegasus Retools Engine webhook callbacks (Secrets Store binding)
-				RETOOLS_WEBHOOK_SECRET: { get: () => Promise<string> };
-				// Cloudflare Workers AI
-				AI: Ai;
-				// Builder queue for Retools PR generation pipeline
-				BUILDER_QUEUE: Queue;
-				// Logging configuration
-				LOG_LEVEL?: string;
-				LOG_ENABLE_CONSOLE?: string;
-				LOG_ENABLE_CLOUDFLARE?: string;
-				LOG_ENABLE_STRUCTURED?: string;
-				LOG_ENABLE_ANALYTICS_ENGINE?: string;
-			};
-			context: {
-				waitUntil(promise: Promise<unknown>): void;
-			};
-			caches: CacheStorage & { default: Cache };
-		}
+		// interface Platform {}
 	}
 }
 

@@ -8,16 +8,14 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { RETOOLS_SCHEMA_VERSION, type RetoolsDeploymentMessage } from '$lib/types/deployment-contract';
+import { getDB } from '$lib/server/db';
+import { sendToQueue } from '$lib/server/queue';
 
-export const POST: RequestHandler = async ({ params, request, platform }) => {
-	const env = platform?.env;
-	if (!env?.DB) throw error(503, 'Database not available');
-
-	const queue = env.BUILDER_QUEUE;
-	if (!queue) throw error(503, 'Builder queue not available');
+export const POST: RequestHandler = async ({ params, request }) => {
+	const db = getDB();
 
 	const parentId = params.id;
-	const parentRow = await env.DB.prepare(`SELECT * FROM retool_jobs WHERE id = ?`).bind(parentId).first<Record<string, unknown>>();
+	const parentRow = await db.prepare(`SELECT * FROM retool_jobs WHERE id = ?`).bind(parentId).first<Record<string, unknown>>();
 	if (!parentRow) throw error(404, 'Parent job not found');
 
 	const body = await request.json();
@@ -30,7 +28,7 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 	const now = Date.now();
 	const refinementCount = ((parentRow.refinement_count as number) || 0) + 1;
 
-	await env.DB.prepare(
+	await db.prepare(
 		`INSERT INTO retool_jobs (id, user_id, github_owner, github_repo, branch, prompt, status, parent_job_id, refinement_count, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?)`
 	).bind(
@@ -62,17 +60,17 @@ export const POST: RequestHandler = async ({ params, request, platform }) => {
 
 	// ── Send to builder queue ────────────────────────────────────
 	try {
-		await queue.send(deploymentMessage);
+		await sendToQueue(deploymentMessage);
 	} catch (e) {
 		console.error('Refine queue error:', e);
-		await env.DB.prepare(
+		await db.prepare(
 			`UPDATE retool_jobs SET status = 'failed', error_message = ?, updated_at = ? WHERE id = ?`
 		).bind(`Queue error: ${String(e)}`, Date.now(), jobId).run();
 		throw error(500, 'Failed to enqueue refinement');
 	}
 
 	// ── Update parent as superseded ──────────────────────────────
-	await env.DB.prepare(
+	await db.prepare(
 		`UPDATE retool_jobs SET updated_at = ? WHERE id = ?`
 	).bind(now, parentId).run();
 

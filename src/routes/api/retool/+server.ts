@@ -3,16 +3,17 @@
  *
  * Accepts a GitHub repo URL + prompt, creates a retool job,
  * and enqueues a RetoolsDeploymentMessage v1 to the Retools builder queue.
- * The queue consumer triggers the Pegasus Retools Engine GitHub Actions workflow.
+ * The queue triggers the Pegasus Retools Engine via HTTP.
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { parseGitHubUrl } from '$lib/types/retool';
 import { RETOOLS_SCHEMA_VERSION, type RetoolsDeploymentMessage } from '$lib/types/deployment-contract';
+import { getDB } from '$lib/server/db';
+import { sendToQueue } from '$lib/server/queue';
 
-export const POST: RequestHandler = async ({ request, platform }) => {
-	const env = platform?.env;
-	if (!env?.DB) throw error(503, 'Database not available');
+export const POST: RequestHandler = async ({ request }) => {
+	const db = getDB();
 
 	const body = await request.json();
 	const { repoUrl, branch, prompt, github_token: githubToken } = body;
@@ -57,16 +58,12 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	// Final fallback (should never happen, but safety net)
 	if (!resolvedBranch) resolvedBranch = 'main';
 
-	// ── Check queue availability ─────────────────────────────────
-	const queue = env.BUILDER_QUEUE;
-	if (!queue) throw error(503, 'Builder queue not available');
-
 	// ── Generate IDs ─────────────────────────────────────────────
 	const jobId = `job-${crypto.randomUUID()}`;
 	const now = Date.now();
 
 	// ── Insert job into DB ───────────────────────────────────────
-	await env.DB.prepare(
+	await db.prepare(
 		`INSERT INTO retool_jobs (id, user_id, github_owner, github_repo, branch, prompt, status, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?)`
 	)
@@ -74,7 +71,6 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		.run();
 
 	// ── Build RetoolsDeploymentMessage v1 for builder queue ──────
-	const baseUrl = env.VITE_BASE_URL || 'https://retools.dev';
 	const deploymentMessage: RetoolsDeploymentMessage = {
 		schema_version: RETOOLS_SCHEMA_VERSION,
 		job_id: jobId,
@@ -89,10 +85,10 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	// ── Send to builder queue ────────────────────────────────────
 	try {
-		await queue.send(deploymentMessage);
+		await sendToQueue(deploymentMessage);
 	} catch (e) {
 		console.error('Queue send error:', e);
-		await env.DB.prepare(
+		await db.prepare(
 			`UPDATE retool_jobs SET status = 'failed', error_message = ?, updated_at = ? WHERE id = ?`
 		)
 			.bind(`Queue error: ${String(e)}`, Date.now(), jobId)

@@ -7,6 +7,7 @@
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { getDB } from '$lib/server/db';
 
 /** Only webhooks originating from this GitHub account are accepted. */
 const ALLOWED_PEGASUS_OWNER = 'neoKode1';
@@ -69,24 +70,19 @@ async function verifySignature(
 	return { valid: mismatch === 0, expected };
 }
 
-export const POST: RequestHandler = async ({ request, platform }) => {
-	const env = platform?.env;
-	if (!env?.DB) return json({ error: 'DB unavailable' }, { status: 503 });
+export const POST: RequestHandler = async ({ request }) => {
+	const db = getDB();
 
 	// ── Read + verify ────────────────────────────────────────────
 	const rawBody = await request.text();
 	const receivedSig = request.headers.get('x-webhook-signature') ?? '';
 
-	// Resolve the secret from Cloudflare Secrets Store (requires .get() call)
-	let webhookSecret: string;
-	try {
-		webhookSecret = (await env.RETOOLS_WEBHOOK_SECRET.get()).trim();
-	} catch (err) {
-		console.error('[Webhook] Failed to resolve RETOOLS_WEBHOOK_SECRET:', err);
+	// Read secret from environment variable
+	const webhookSecret = (process.env.RETOOLS_WEBHOOK_SECRET ?? '').trim();
+	if (!webhookSecret) {
+		console.error('[Webhook] RETOOLS_WEBHOOK_SECRET is not set');
 		return json({ error: 'Webhook secret not configured' }, { status: 500 });
 	}
-
-	if (!webhookSecret) return json({ error: 'Webhook secret not configured' }, { status: 500 });
 
 	console.log('[Webhook] Secret type:', typeof webhookSecret);
 	console.log('[Webhook] Secret length:', webhookSecret.length);
@@ -174,7 +170,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	// ── Update DB ────────────────────────────────────────────────
 	binds.push(job_id);
-	await env.DB.prepare(
+	await db.prepare(
 		`UPDATE retool_jobs SET ${sets.join(', ')} WHERE id = ?`
 	)
 		.bind(...binds)

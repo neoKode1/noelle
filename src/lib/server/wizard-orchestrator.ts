@@ -1,15 +1,19 @@
 /**
- * Wizard Orchestrator — Agent Wizard AI logic for Cloudflare Workers AI
+ * Wizard Orchestrator — Agent Wizard AI logic (Anthropic Claude)
  *
- * Uses env.AI (Llama via Workers AI) to:
- *   1. Maintain a conversational session stored in D1
+ * Uses Anthropic SDK to:
+ *   1. Maintain a conversational session stored in DB (Turso/libSQL)
  *   2. Extract structured requirements from natural language
  *   3. Recommend a template + MCP servers once enough info is gathered
  */
 
+import Anthropic from '@anthropic-ai/sdk';
 import { nanoid } from 'nanoid';
 import { listTemplates } from '$lib/data/agent-templates';
 import type { ChatMessage, ExtractedRequirements, AgentRecommendation } from '$lib/types/agent';
+import type { getDB } from '$lib/server/db';
+
+type DB = ReturnType<typeof getDB>;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -84,7 +88,7 @@ __CONFIG_END__
 
 // ── Session helpers ───────────────────────────────────────────────────────────
 
-async function loadSession(db: D1Database, sessionId: string): Promise<D1Session | null> {
+async function loadSession(db: DB, sessionId: string): Promise<D1Session | null> {
 	const result = await db
 		.prepare('SELECT * FROM agent_sessions WHERE id = ?')
 		.bind(sessionId)
@@ -93,7 +97,7 @@ async function loadSession(db: D1Database, sessionId: string): Promise<D1Session
 }
 
 async function upsertSession(
-	db: D1Database,
+	db: DB,
 	sessionId: string,
 	messages: ChatMessage[],
 	requirements: ExtractedRequirements | null,
@@ -124,8 +128,7 @@ async function upsertSession(
 // ── Main entry point ─────────────────────────────────────────────────────────
 
 export async function processWizardMessage(
-	ai: Ai,
-	db: D1Database,
+	db: DB,
 	userMessage: string,
 	sessionId?: string
 ): Promise<WizardChatResponse> {
@@ -144,24 +147,23 @@ export async function processWizardMessage(
 	// Append user turn
 	messages.push({ role: 'user', content: userMessage, timestamp: new Date().toISOString() });
 
-	// Build messages array for Workers AI
-	const aiMessages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
-		{ role: 'system', content: buildSystemPrompt() },
-		...messages.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
-	];
+	// Build messages array for Anthropic
+	const aiMessages: { role: 'user' | 'assistant'; content: string }[] = messages.map((m) => ({
+		role: m.role as 'user' | 'assistant',
+		content: m.content
+	}));
 
-	// Call Workers AI — @cf/meta/llama-3.1-8b-instruct
-	const aiResponse = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-		messages: aiMessages,
+	// Call Anthropic Claude
+	const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+	const aiResponse = await anthropic.messages.create({
+		model: 'claude-3-5-haiku-20241022',
 		max_tokens: 800,
-		temperature: 0.4
+		system: buildSystemPrompt(),
+		messages: aiMessages
 	});
 
-	// Normalize response
 	const rawText =
-		typeof aiResponse === 'object' && 'response' in aiResponse
-			? (aiResponse as { response: string }).response
-			: String(aiResponse);
+		aiResponse.content[0].type === 'text' ? aiResponse.content[0].text : '';
 
 	// Parse optional structured config block
 	const parsed = parseConfigBlock(rawText);
