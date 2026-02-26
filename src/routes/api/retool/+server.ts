@@ -8,6 +8,10 @@
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+
+// Tell Vercel to give this function up to 300 seconds.
+// The 3-step AI pipeline (Claude → Gemini → Claude) needs the runway.
+export const config = { maxDuration: 300 };
 import { parseGitHubUrl } from '$lib/types/retool';
 import type { ImageAttachment } from '$lib/types/orchestration';
 import { RETOOLS_SCHEMA_VERSION, type RetoolsDeploymentMessage } from '$lib/types/deployment-contract';
