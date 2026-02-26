@@ -34,7 +34,7 @@ export const retoolJobs = sqliteTable('retool_jobs', {
 
 	previewUrl: text('preview_url'),
 	productionUrl: text('production_url'),
-	deploymentId: text('deployment_id'), // Pegasus deployment_id
+	deploymentId: text('deployment_id'), // Builder engine deployment_id
 	githubRunId: text('github_run_id'), // GitHub Actions run ID
 	githubRunUrl: text('github_run_url'), // Link to GH Actions run
 

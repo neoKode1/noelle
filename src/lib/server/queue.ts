@@ -2,11 +2,11 @@
  * Queue helper — Vercel replacement for Cloudflare Queues
  *
  * Sends a job message by POSTing JSON to BUILDER_QUEUE_URL
- * (the Pegasus Retools Engine HTTP trigger endpoint).
+ * (the Retools Builder Queue HTTP trigger endpoint).
  *
- * Set this environment variable in Vercel:
- *   BUILDER_QUEUE_URL   — e.g. https://your-pegasus-trigger.example.com/trigger
- *   BUILDER_QUEUE_TOKEN — optional Bearer token for the trigger endpoint
+ * Set these environment variables in Vercel:
+ *   BUILDER_QUEUE_URL   — e.g. https://retools-builder-queue-dev.nexartis.workers.dev
+ *   BUILDER_QUEUE_TOKEN — Bearer token for the trigger endpoint
  */
 
 export async function sendToQueue(message: unknown): Promise<void> {

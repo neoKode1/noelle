@@ -3,7 +3,7 @@
  *
  * Accepts a GitHub repo URL + prompt, creates a retool job,
  * and enqueues a RetoolsDeploymentMessage v1 to the Retools builder queue.
- * The queue triggers the Pegasus Retools Engine via HTTP.
+ * The queue triggers the Retools Builder Engine via HTTP.
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';

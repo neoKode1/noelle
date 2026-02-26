@@ -55,7 +55,7 @@
 				<!-- Trust bar -->
 				<div class="mt-12 reveal delay-300 flex items-center gap-2 bg-white/5 border border-white/5 rounded-full px-4 py-1.5">
 					<div class="flex text-yellow-400 gap-0.5 text-xs">★★★★★</div>
-					<span class="text-xs text-slate-300">Powered by <span class="text-white font-medium">Cubicube™</span> · Cloudflare Edge · AI-Driven Builds</span>
+					<span class="text-xs text-slate-300">Powered by <span class="text-white font-medium">Retools Engine</span> · AI-Driven Builds · Auto PR Generation</span>
 				</div>
 			</div>
 
@@ -168,10 +168,10 @@
 				<h3 class="text-2xl font-medium text-white mb-2">Built on Proven Infrastructure</h3>
 				<p class="text-brand-200 font-medium mb-4">Every build runs on Cloudflare's global edge.</p>
 				<p class="text-slate-400 text-sm max-w-2xl mx-auto mb-8">
-					Retools uses Cubicube's building tools. AI clones your repo, applies changes, validates the build, and opens a PR — all automatically.
+					Retools uses its own AI build engine. It clones your repo, applies changes, validates the build, and opens a PR — all automatically.
 				</p>
 				<div class="flex flex-wrap justify-center gap-3">
-					{#each ['Powered by Cubicube™', 'Cloudflare Edge', 'AI-Driven Builds', 'Auto PR Generation'] as badge}
+					{#each ['Retools Engine', 'Claude AI', 'AI-Driven Builds', 'Auto PR Generation'] as badge}
 						<span class="px-4 py-1.5 rounded-full glass-panel text-xs text-slate-300 border border-white/10">{badge}</span>
 					{/each}
 				</div>

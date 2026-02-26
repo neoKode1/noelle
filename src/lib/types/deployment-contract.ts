@@ -2,7 +2,7 @@
  * Retools Deployment Contract - Schema Version 1
  *
  * This contract defines the message format for Retools PR generation jobs.
- * Unlike CubiCube which deploys to Cloudflare Workers, Retools creates PRs
+ * Retools creates PRs
  * on user repositories using their GitHub token.
  *
  * This file is shared between:
@@ -16,7 +16,7 @@ export const RETOOLS_SCHEMA_VERSION = 1;
  * Retools Deployment Message
  *
  * Enqueued by the Retools SvelteKit app when a user submits a retool job.
- * Consumed by the builder queue worker, which triggers the Pegasus Retools Engine
+ * Consumed by the builder queue worker, which triggers the Retools Builder Engine
  * GitHub Actions workflow.
  */
 export interface RetoolsDeploymentMessage {
@@ -32,7 +32,7 @@ export interface RetoolsDeploymentMessage {
 	branch: string; // Target branch (auto-detected if not provided)
 
 	// User's GitHub token (used for checkout, push, PR creation)
-	// This is passed through to Pegasus and never logged
+	// This is passed through to the builder engine and never logged
 	github_token: string;
 
 	// AI prompt describing the changes to make

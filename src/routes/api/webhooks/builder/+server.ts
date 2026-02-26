@@ -1,7 +1,7 @@
 /**
- * POST /api/webhooks/pegasus
+ * POST /api/webhooks/builder
  *
- * Receives HMAC-signed webhook callbacks from the Pegasus Retools Engine.
+ * Receives HMAC-signed webhook callbacks from the Retools Builder Engine.
  * Only accepts callbacks originating from the neoKode1 GitHub account.
  * Updates the corresponding retool_jobs row with status, PR URL, GitHub run details, etc.
  */
@@ -10,10 +10,10 @@ import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
 
 /** Only webhooks originating from this GitHub account are accepted. */
-const ALLOWED_PEGASUS_OWNER = 'neoKode1';
+const ALLOWED_BUILDER_OWNER = 'neoKode1';
 
 /**
- * Valid pipeline statuses sent by pegasus-retools-engine workflow.
+ * Valid pipeline statuses sent by the retools-engine workflow.
  * These match the UI pipeline tracker exactly.
  */
 const VALID_STATUSES = new Set([
@@ -77,14 +77,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	const rawBody = await request.text();
 	const receivedSig = request.headers.get('x-webhook-signature') ?? '';
 
-	// Read secret from environment variable
 	const webhookSecret = (process.env.RETOOLS_WEBHOOK_SECRET ?? '').trim();
 	if (!webhookSecret) {
 		console.error('[Webhook] RETOOLS_WEBHOOK_SECRET is not set');
 		return json({ error: 'Webhook secret not configured' }, { status: 500 });
 	}
 
-	console.log('[Webhook] Secret type:', typeof webhookSecret);
 	console.log('[Webhook] Secret length:', webhookSecret.length);
 	console.log('[Webhook] Secret (first 8):', webhookSecret.substring(0, 8));
 	console.log('[Webhook] Received sig:', receivedSig.substring(0, 16) + '...');
@@ -108,25 +106,23 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	// ── Parse payload ────────────────────────────────────────────
 	const payload = JSON.parse(rawBody);
-	const { job_id, status: pegasusStatus } = payload;
-	if (!job_id || !pegasusStatus) {
+	const { job_id, status: builderStatus } = payload;
+	if (!job_id || !builderStatus) {
 		return json({ error: 'Missing job_id or status' }, { status: 400 });
 	}
 
 	// ── Source isolation: neoKode1 repos only ────────────────────
 	// Reject any callback whose github_run_url is not from the allowed owner.
-	// This ensures Nexartis workflows (pegasus-hb2-retools, pegasus-horizon-breakthrough)
-	// can never update Retools job records, even if they somehow possess the secret.
 	if (payload.github_run_url) {
 		const owner = extractGitHubOwner(payload.github_run_url);
-		if (owner && owner.toLowerCase() !== ALLOWED_PEGASUS_OWNER.toLowerCase()) {
-			console.error(`[Webhook] REJECTED: run URL owner is "${owner}", expected "${ALLOWED_PEGASUS_OWNER}"`);
+		if (owner && owner.toLowerCase() !== ALLOWED_BUILDER_OWNER.toLowerCase()) {
+			console.error(`[Webhook] REJECTED: run URL owner is "${owner}", expected "${ALLOWED_BUILDER_OWNER}"`);
 			return json({ error: 'Unauthorized source repository' }, { status: 403 });
 		}
 		console.log(`[Webhook] Source owner verified: ${owner} ✅`);
 	}
 
-	console.log(`[Webhook] Job ${job_id} → status: ${pegasusStatus}`);
+	console.log(`[Webhook] Job ${job_id} → status: ${builderStatus}`);
 
 	const now = Date.now();
 
@@ -134,19 +130,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	const sets: string[] = ['updated_at = ?'];
 	const binds: unknown[] = [now];
 
-	// Update status if it's a valid pipeline status
-	if (VALID_STATUSES.has(pegasusStatus)) {
+	if (VALID_STATUSES.has(builderStatus)) {
 		sets.push('status = ?');
-		binds.push(pegasusStatus);
+		binds.push(builderStatus);
 	}
 
-	// PR URL (when preview_ready)
 	if (payload.pr_url) {
 		sets.push('preview_url = ?');
 		binds.push(payload.pr_url);
 	}
 
-	// GitHub run details
 	if (payload.github_run_id) {
 		sets.push('github_run_id = ?');
 		binds.push(String(payload.github_run_id));
@@ -156,14 +149,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		binds.push(payload.github_run_url);
 	}
 
-	// Error message (when failed)
-	if (payload.message && pegasusStatus === 'failed') {
+	if (payload.message && builderStatus === 'failed') {
 		sets.push('error_message = ?');
 		binds.push(payload.message);
 	}
 
-	// Mark as completed when PR is ready or deploying is done
-	if (pegasusStatus === 'preview_ready') {
+	if (builderStatus === 'preview_ready') {
 		sets.push('completed_at = ?');
 		binds.push(now);
 	}

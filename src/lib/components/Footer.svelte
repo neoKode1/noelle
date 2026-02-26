@@ -88,10 +88,7 @@
 								<a href="https://nexartis.com" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Nexartis</a>
 							</li>
 							<li>
-								<a href="https://cubicube.com/" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm inline-flex items-center gap-2" style="font-family: 'Roboto', sans-serif;">
-									CubiCube™
-									<span class="text-[9px] bg-gradient-to-r from-[#101d6e] to-[#2a3a9a] text-white px-2 py-0.5 rounded-full">Beta</span>
-								</a>
+								<a href="https://nexartis.com" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Retools Engine</a>
 							</li>
 							<li><a href="https://helixpods.ai/" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Helix Command Center</a></li>
 							<li><a href="https://www.cloudflare.com/" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Cloudflare</a></li>

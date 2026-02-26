@@ -155,7 +155,7 @@
 		"dev": {
 			"routes": [
 				{
-					"pattern": "retools.streamcube.link",
+					"pattern": "retools.vercel.app",
 					"custom_domain": true
 				}
 			],
@@ -197,8 +197,8 @@
 				"ENVIRONMENT": "development",
 				"NODE_ENV": "development",
 				"CONTACT_EMAIL_TO": "dev@nexartis.com",
-				"FROM_EMAIL": "noreply@retools.streamcube.link",
-				"VITE_BASE_URL": "https://retools.streamcube.link",
+				"FROM_EMAIL": "noreply@retools.dev",
+				"VITE_BASE_URL": "https://retools.vercel.app",
 				"LOG_LEVEL": "info",
 				"LOG_ENABLE_CONSOLE": "true",
 				"LOG_ENABLE_CLOUDFLARE": "true",
