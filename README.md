@@ -2,7 +2,7 @@
 
 > **Ai webkits — paste a repo, describe changes, get a PR.**
 
-![Noelle](./static/noelle_sc2.png)
+![Noelle](static/noelle_sc2.png)
 
 Noelle is an AI-powered PR generation platform. Developers paste a GitHub repo URL, provide their own GitHub token, describe what they want changed in plain English, and Noelle enqueues the job into the Noelle builder queue. The queue consumer dispatches the Noelle Builder Engine to clone, modify, build, push a branch, and create a pull request — all scoped to the repos the user's token can access.
 
