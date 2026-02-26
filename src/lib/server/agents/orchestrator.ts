@@ -220,6 +220,13 @@ export async function runOrchestration(
 	// Step 1: Build orchestration plan
 	const plan = await buildPlan(prompt, hasImages, model);
 
+	// Guard: if Claude returned a malformed plan (tasks missing/not an array),
+	// fall back to a single coder task so the pipeline still runs.
+	if (!Array.isArray(plan.tasks) || plan.tasks.length === 0) {
+		console.warn('[orchestrator] plan.tasks is not a valid array — falling back to coder-only task');
+		plan.tasks = [{ role: 'coder', instruction: prompt }];
+	}
+
 	// Step 2: Execute sub-agents sequentially
 	const results: SubAgentResult[] = [];
 
