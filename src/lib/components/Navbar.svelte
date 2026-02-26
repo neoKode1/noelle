@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
 	let mobileOpen = $state(false);
 </script>
 
@@ -27,14 +28,12 @@
 		</div>
 
 		<!-- Mobile toggle -->
-		<button class="md:hidden p-2 text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = !mobileOpen}>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				{#if mobileOpen}
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-				{:else}
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-				{/if}
-			</svg>
+		<button class="md:hidden p-2 text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = !mobileOpen} aria-label={mobileOpen ? 'Close menu' : 'Open menu'}>
+			{#if mobileOpen}
+				<Icon icon="ph:x-bold" width="24" height="24" />
+			{:else}
+				<Icon icon="ph:list-bold" width="24" height="24" />
+			{/if}
 		</button>
 	</div>
 

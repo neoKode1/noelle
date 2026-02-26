@@ -2,6 +2,7 @@
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import UnicornBackground from '$lib/components/UnicornBackground.svelte';
+	import Icon from '@iconify/svelte';
 	import MCPServerModal from '$lib/components/MCPServerModal.svelte';
 	import { listServers, getCategories } from '$lib/data/mcp-registry';
 	import { MCP_CATEGORY_LABELS } from '$lib/types/mcp';
@@ -68,9 +69,9 @@
 
 			<!-- Search -->
 			<div class="max-w-xl mx-auto relative">
-				<svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-				</svg>
+				<div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+					<Icon icon="ph:magnifying-glass-bold" width="16" height="16" />
+				</div>
 				<input
 					type="search"
 					placeholder="Search servers, tools, databases…"
@@ -118,7 +119,11 @@
 			<!-- Grid -->
 			{#if filtered.length === 0}
 				<div class="text-center py-24 text-slate-500">
-					<div class="text-4xl mb-4">🔍</div>
+					<div class="mb-4 flex justify-center">
+						<div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500">
+							<Icon icon="ph:magnifying-glass-bold" width="28" height="28" />
+						</div>
+					</div>
 					<p class="text-lg font-medium text-slate-400">No servers match your search</p>
 					<p class="text-sm mt-1">Try adjusting your filters or search term</p>
 				</div>
@@ -161,7 +166,7 @@
 							<!-- Env count pill -->
 							{#if server.requiredEnv.length}
 								<div class="flex items-center gap-1 text-[10px] text-red-400/70">
-									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+									<Icon icon="ph:key-bold" width="12" height="12" />
 									{server.requiredEnv.length} env var{server.requiredEnv.length !== 1 ? 's' : ''} required
 								</div>
 							{/if}

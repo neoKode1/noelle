@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import { Plus, ChevronRight, GitBranch, LoaderCircle } from 'lucide-svelte';
+	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 	import { STATUS_CONFIG, PIPELINE_STAGES, type RetoolJob, type JobStatus } from '$lib/types/retool';
 
@@ -45,7 +45,7 @@
 				</p>
 			</div>
 			<a href="/retool" class="btn-secondary gap-2 w-fit text-sm">
-				<Plus class="w-4 h-4" /> Build with Noelle
+				<Icon icon="ph:plus-bold" width="16" height="16" /> Build with Noelle
 			</a>
 		</div>
 
@@ -64,14 +64,18 @@
 		<!-- Loading -->
 		{#if loading}
 			<div class="glass-panel rounded-2xl text-center py-20">
-				<LoaderCircle class="w-8 h-8 text-brand-400 mx-auto mb-3 animate-spin" />
+				<Icon icon="ph:spinner-bold" width="32" height="32" class="text-brand-400 mx-auto mb-3 animate-spin" />
 				<p class="text-slate-500 text-sm">Loading jobs…</p>
 			</div>
 
 		<!-- Empty state -->
 		{:else if jobs.length === 0}
 			<div class="glass-panel rounded-2xl text-center py-20">
-				<div class="text-4xl mb-4">📂</div>
+				<div class="mb-4 flex justify-center">
+					<div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500">
+						<Icon icon="ph:folder-open-bold" width="28" height="28" />
+					</div>
+				</div>
 				<h2 class="text-lg font-medium text-white mb-2">No jobs yet</h2>
 				<p class="text-slate-500 text-sm mb-8">Paste a repo URL and describe what you want changed.</p>
 				<a href="/retool" class="btn-secondary">Build with Noelle</a>
@@ -99,7 +103,7 @@
 									{job.githubOwner}/{job.githubRepo}
 									{#if job.branch !== 'main'}
 										<span class="text-[11px] text-slate-500 font-normal flex items-center gap-0.5">
-											<GitBranch class="w-3 h-3" />{job.branch}
+											<Icon icon="ph:git-branch-bold" width="12" height="12" />{job.branch}
 										</span>
 									{/if}
 								</h3>
@@ -121,7 +125,7 @@
 										View PR
 									</a>
 								{/if}
-								<ChevronRight class="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" />
+								<Icon icon="ph:caret-right-bold" width="16" height="16" class="text-slate-600 group-hover:text-slate-400 transition-colors" />
 							</div>
 						</div>
 					</div>

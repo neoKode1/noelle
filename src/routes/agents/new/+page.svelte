@@ -2,6 +2,7 @@
 	import type { WizardChatResponse } from '$lib/server/wizard-orchestrator';
 	import type { ChatMessage, ExtractedRequirements, AgentRecommendation } from '$lib/types/agent';
 	import type { ImageAttachment } from '$lib/types/retool';
+	import Icon from '@iconify/svelte';
 
 	// ── State ────────────────────────────────────────────────────────────────────
 	let sessionId = $state<string | null>(null);
@@ -133,7 +134,7 @@
 	<!-- Header -->
 	<header class="border-b border-white/5 px-6 py-4 flex items-center gap-4">
 		<a href="/" aria-label="Back to home" class="text-slate-500 hover:text-white transition-colors">
-			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+			<Icon icon="ph:arrow-left-bold" width="20" height="20" />
 		</a>
 		<div>
 			<h1 class="text-sm font-semibold text-white">Agent Wizard</h1>
@@ -157,20 +158,26 @@
 				{#each displayMessages as msg (msg.timestamp + msg.role)}
 					<div class="flex gap-3 {msg.role === 'user' ? 'justify-end' : 'justify-start'}">
 						{#if msg.role === 'assistant'}
-							<div class="w-7 h-7 rounded-full bg-brand-600/20 border border-brand-500/30 flex items-center justify-center shrink-0 text-[13px]">🤖</div>
+							<div class="w-7 h-7 rounded-full bg-brand-600/20 border border-brand-500/30 flex items-center justify-center shrink-0 text-brand-300">
+								<Icon icon="ph:robot-bold" width="14" height="14" />
+							</div>
 						{/if}
 						<div class="max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed {msg.role === 'user' ? 'bg-brand-600 text-white rounded-br-sm' : 'bg-white/5 border border-white/8 text-slate-200 rounded-bl-sm'}">
 							{msg.content}
 						</div>
 						{#if msg.role === 'user'}
-							<div class="w-7 h-7 rounded-full bg-white/10 border border-white/10 flex items-center justify-center shrink-0 text-[13px]">👤</div>
+							<div class="w-7 h-7 rounded-full bg-white/10 border border-white/10 flex items-center justify-center shrink-0 text-slate-300">
+								<Icon icon="ph:user-bold" width="14" height="14" />
+							</div>
 						{/if}
 					</div>
 				{/each}
 
 				{#if loading}
 					<div class="flex gap-3 justify-start">
-						<div class="w-7 h-7 rounded-full bg-brand-600/20 border border-brand-500/30 flex items-center justify-center shrink-0 text-[13px]">🤖</div>
+						<div class="w-7 h-7 rounded-full bg-brand-600/20 border border-brand-500/30 flex items-center justify-center shrink-0 text-brand-300">
+							<Icon icon="ph:robot-bold" width="14" height="14" />
+						</div>
 						<div class="bg-white/5 border border-white/8 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
 							<span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0ms]"></span>
 							<span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:150ms]"></span>
@@ -203,7 +210,7 @@
 									title="Remove {img.name}"
 									class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
 								>
-									<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+									<Icon icon="ph:x-bold" width="14" height="14" class="text-white" />
 								</button>
 							</div>
 						{/each}
@@ -223,11 +230,7 @@
 						disabled={loading}
 						class="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-brand-400 hover:bg-brand-500/10 border border-white/8 transition-colors disabled:opacity-40 shrink-0"
 					>
-						<!-- paperclip icon -->
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-								d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-						</svg>
+						<Icon icon="ph:paperclip-bold" width="16" height="16" />
 					</button>
 
 					<textarea
@@ -246,7 +249,7 @@
 						aria-label="Send message"
 						class="w-10 h-10 bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-all shrink-0"
 					>
-						<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7"/></svg>
+						<Icon icon="ph:paper-plane-right-bold" width="16" height="16" class="text-white" />
 					</button>
 				</div>
 
@@ -271,7 +274,9 @@
 
 				{#if !requirements && !recommendation}
 					<div class="glass-panel rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-3 border-dashed">
-						<div class="text-4xl">🧩</div>
+						<div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500">
+							<Icon icon="ph:puzzle-piece-bold" width="28" height="28" />
+						</div>
 						<p class="text-slate-500 text-sm">Your agent configuration will appear here as you chat with the wizard.</p>
 					</div>
 				{/if}
@@ -279,7 +284,9 @@
 				{#if requirements}
 					<div class="glass-panel rounded-2xl p-5 mb-4">
 						<div class="flex items-center gap-2 mb-4">
-							<span class="text-lg">📋</span>
+							<div class="w-6 h-6 rounded-md bg-brand-500/10 flex items-center justify-center text-brand-400">
+								<Icon icon="ph:clipboard-text-bold" width="14" height="14" />
+							</div>
 							<h3 class="text-sm font-semibold text-white">Extracted Requirements</h3>
 						</div>
 						<dl class="space-y-2.5 text-sm">
@@ -305,7 +312,9 @@
 				{#if recommendation}
 					<div class="rounded-2xl p-5 border border-brand-500/30 bg-brand-500/5">
 						<div class="flex items-center gap-2 mb-3">
-							<span class="text-lg">✨</span>
+							<div class="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-400">
+								<Icon icon="ph:sparkle-bold" width="14" height="14" />
+							</div>
 							<h3 class="text-sm font-semibold text-white">Recommended Template</h3>
 							{#if recommendation.ready_to_generate}
 								<span class="ml-auto text-[10px] font-bold text-emerald-400 bg-emerald-900/30 border border-emerald-500/30 px-2 py-0.5 rounded-full">Ready</span>

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import { Send, LoaderCircle, CircleAlert, KeyRound, Paperclip, X } from 'lucide-svelte';
 	import Icon from '@iconify/svelte';
 	import { goto } from '$app/navigation';
 	import { EMPTY_RETOOL_FORM, type RetoolFormData, type ImageAttachment } from '$lib/types/retool';
@@ -231,7 +230,7 @@
 				<!-- GitHub Token -->
 				<div>
 					<label for="github_token" class="form-label flex items-center gap-1.5">
-						<KeyRound class="w-3.5 h-3.5" /> GitHub Personal Access Token
+						<Icon icon="ph:key-bold" width="14" height="14" /> GitHub Personal Access Token
 					</label>
 					<input
 						id="github_token"
@@ -268,7 +267,7 @@
 							disabled={submitting}
 							class="absolute bottom-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-brand-400 hover:bg-brand-500/10 transition-colors disabled:opacity-40"
 						>
-							<Paperclip class="w-4 h-4" />
+							<Icon icon="ph:paperclip-bold" width="16" height="16" />
 						</button>
 					</div>
 					<p class="text-xs text-slate-600 mt-1.5">
@@ -302,7 +301,7 @@
 										class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
 										title="Remove {img.name}"
 									>
-										<X class="w-4 h-4 text-white" />
+										<Icon icon="ph:x-bold" width="16" height="16" class="text-white" />
 									</button>
 								</div>
 							{/each}
@@ -316,7 +315,7 @@
 				<!-- Error -->
 				{#if errorMsg}
 					<div class="flex items-start gap-2.5 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-						<CircleAlert class="w-4 h-4 mt-0.5 shrink-0" />
+						<Icon icon="ph:warning-circle-bold" width="16" height="16" class="mt-0.5 shrink-0" />
 						{errorMsg}
 					</div>
 				{/if}
@@ -328,9 +327,9 @@
 					disabled={submitting}
 				>
 					{#if submitting}
-						<LoaderCircle class="w-4 h-4 animate-spin" /> Dispatching build…
+						<Icon icon="ph:spinner-bold" width="16" height="16" class="animate-spin" /> Dispatching build…
 					{:else}
-						<Send class="w-4 h-4" /> Retool My Site
+						<Icon icon="ph:paper-plane-right-bold" width="16" height="16" /> Retool My Site
 					{/if}
 				</button>
 			</form>

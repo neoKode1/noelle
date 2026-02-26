@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import { ArrowRight, LoaderCircle } from 'lucide-svelte';
+	import Icon from '@iconify/svelte';
 
 	let email = $state('');
 	let sent = $state(false);
@@ -34,7 +34,11 @@
 		{#if sent}
 			<!-- Success state -->
 			<div class="glass-panel rounded-2xl p-10 text-center">
-				<div class="text-5xl mb-5">✉️</div>
+				<div class="mb-5 flex justify-center">
+					<div class="w-16 h-16 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-300">
+						<Icon icon="ph:envelope-bold" width="32" height="32" />
+					</div>
+				</div>
 				<h1 class="text-xl font-medium text-white mb-2">Check your email</h1>
 				<p class="text-slate-400 text-sm leading-relaxed mb-6">
 					We sent a magic link to <strong class="text-white">{email}</strong>. Click it to sign in.
@@ -69,9 +73,9 @@
 
 					<button type="submit" class="btn-secondary w-full gap-2 mt-2" disabled={sending || !email.trim()}>
 						{#if sending}
-							<LoaderCircle class="w-4 h-4 animate-spin" /> Sending…
+							<Icon icon="ph:spinner-bold" width="16" height="16" class="animate-spin" /> Sending…
 						{:else}
-							Send Magic Link <ArrowRight class="w-4 h-4" />
+							Send Magic Link <Icon icon="ph:arrow-right-bold" width="16" height="16" />
 						{/if}
 					</button>
 				</form>
