@@ -9,7 +9,7 @@
 	}
 	body {
 		@apply leading-relaxed text-slate-400 antialiased overflow-x-hidden;
-		background-color: #030304;
+		background-color: transparent;
 		font-family: 'Inter', system-ui, -apple-system, sans-serif;
 	}
 
