@@ -40,7 +40,7 @@
 </script>
 
 <svelte:head>
-	<title>MCP Server Browser — Retools</title>
+	<title>MCP Server Browser — Noelle</title>
 	<meta name="description" content="Browse 30+ Model Context Protocol servers. Connect your AI agents to databases, dev tools, APIs, and more." />
 </svelte:head>
 

@@ -54,8 +54,8 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		branch: parentRow.branch as string,
 		github_token: githubToken,
 		prompt: prompt,
-		user_email: 'retools@nexartis.com',
-		user_name: 'Retools AI'
+		user_email: 'noelle@nexartis.com',
+		user_name: 'Noelle AI'
 	};
 
 	// ── Send to builder queue ────────────────────────────────────

@@ -35,7 +35,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				headers: {
 					Authorization: `token ${githubToken}`,
 					Accept: 'application/vnd.github.v3+json',
-					'User-Agent': 'Retools-API'
+					'User-Agent': 'Noelle-API'
 				}
 			}
 		);
@@ -79,8 +79,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		branch: resolvedBranch,
 		github_token: githubToken,
 		prompt: prompt,
-		user_email: 'retools@nexartis.com',
-		user_name: 'Retools AI'
+		user_email: 'noelle@nexartis.com',
+		user_name: 'Noelle AI'
 	};
 
 	// ── Send to builder queue ────────────────────────────────────

@@ -28,7 +28,7 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard | Retools</title>
+	<title>Dashboard | Noelle</title>
 </svelte:head>
 
 <Navbar />
@@ -45,7 +45,7 @@
 				</p>
 			</div>
 			<a href="/retool" class="btn-secondary gap-2 w-fit text-sm">
-				<Plus class="w-4 h-4" /> Retool a Site
+				<Plus class="w-4 h-4" /> Build with Noelle
 			</a>
 		</div>
 
@@ -74,7 +74,7 @@
 				<div class="text-4xl mb-4">📂</div>
 				<h2 class="text-lg font-medium text-white mb-2">No jobs yet</h2>
 				<p class="text-slate-500 text-sm mb-8">Paste a repo URL and describe what you want changed.</p>
-				<a href="/retool" class="btn-secondary">Retool a Site</a>
+				<a href="/retool" class="btn-secondary">Build with Noelle</a>
 			</div>
 
 		{:else}

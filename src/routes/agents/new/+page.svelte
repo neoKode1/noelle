@@ -15,7 +15,7 @@
 	// Boot message shown before first user turn
 	const WELCOME: ChatMessage = {
 		role: 'assistant',
-		content: "👋 Welcome! I'm the Retools Agent Wizard. Tell me what you'd like to build — a customer support bot, research pipeline, data analyst, code generator, or something else entirely?",
+		content: "👋 Welcome! I'm the Noelle Agent Wizard. Tell me what you'd like to build — a customer support bot, research pipeline, data analyst, code generator, or something else entirely?",
 		timestamp: new Date().toISOString()
 	};
 
@@ -74,7 +74,7 @@
 </script>
 
 <svelte:head>
-	<title>Build an Agent — Retools</title>
+	<title>Build an Agent — Noelle</title>
 </svelte:head>
 
 <div class="min-h-screen bg-[#030304] flex flex-col">

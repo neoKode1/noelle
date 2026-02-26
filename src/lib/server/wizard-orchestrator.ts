@@ -45,7 +45,7 @@ function buildSystemPrompt(): string {
 		.map((t) => `• ${t.id} — ${t.name} (${t.framework}, ${t.category}): ${t.description}`)
 		.join('\n');
 
-	return `You are the Retools Agent Wizard, an expert AI assistant that helps users build custom AI agents powered by the +12 Monkeys SDK on Cloudflare Workers.
+	return `You are the Noelle Agent Wizard, an expert AI assistant that helps users build custom AI agents powered by the +12 Monkeys SDK on Cloudflare Workers.
 
 Your job is to have a friendly, concise conversation to understand what the user wants to build, then recommend the best agent template and MCP server tools.
 

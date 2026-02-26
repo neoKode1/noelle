@@ -21,7 +21,7 @@
 </script>
 
 <svelte:head>
-	<title>Sign In | Retools</title>
+	<title>Sign In | Noelle</title>
 </svelte:head>
 
 <Navbar />
@@ -48,8 +48,8 @@
 			<div class="glass-panel rounded-2xl p-8">
 				<!-- Logo -->
 				<div class="flex flex-col items-center mb-8">
-					<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white font-semibold text-base mb-4 shadow-lg shadow-brand-500/30">R</div>
-					<h1 class="text-xl font-medium text-white tracking-tight">Sign in to Retools</h1>
+					<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white font-semibold text-base mb-4 shadow-lg shadow-brand-500/30">N</div>
+					<h1 class="text-xl font-medium text-white tracking-tight">Sign in to Noelle</h1>
 					<p class="text-slate-500 text-sm mt-1">Enter your email — we'll send a magic link.</p>
 				</div>
 

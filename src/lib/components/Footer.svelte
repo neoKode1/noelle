@@ -24,16 +24,16 @@
 			<!-- Brand column -->
 			<div class="lg:col-span-5">
 				<div class="max-w-md">
-					<!-- Nexartis + Retools lockup -->
+					<!-- Nexartis + Noelle lockup -->
 					<div class="mb-8">
 						<div class="flex items-center gap-3 mb-2">
 							<!-- Nexartis wordmark in Nexartis navy style -->
 							<span class="text-white font-bold text-lg tracking-tight uppercase" style="font-family: 'Inter', system-ui, sans-serif; letter-spacing: 0.08em;">NEXARTIS</span>
 							<span class="text-white/30 text-lg">×</span>
-							<!-- Retools badge -->
+							<!-- Noelle badge -->
 							<div class="flex items-center gap-1.5">
-								<div class="w-5 h-5 rounded bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-[9px] font-bold">R</div>
-								<span class="text-white font-semibold tracking-tight uppercase text-sm">Retools</span>
+								<div class="w-5 h-5 rounded bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-[9px] font-bold">N</div>
+								<span class="text-white font-semibold tracking-tight uppercase text-sm">Noelle</span>
 							</div>
 						</div>
 						<p class="text-white/30 text-xs tracking-widest uppercase" style="font-family: 'Roboto', sans-serif;">A Nexartis Technology Product</p>
@@ -88,7 +88,7 @@
 								<a href="https://nexartis.com" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Nexartis</a>
 							</li>
 							<li>
-								<a href="https://nexartis.com" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Retools Engine</a>
+								<a href="https://nexartis.com" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Noelle Engine</a>
 							</li>
 							<li><a href="https://helixpods.ai/" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Helix Command Center</a></li>
 							<li><a href="https://www.cloudflare.com/" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Cloudflare</a></li>
@@ -102,7 +102,7 @@
 							<li><a href="https://nexartis.com/privacy" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Privacy Policy</a></li>
 							<li><a href="https://nexartis.com/transparency" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">Statement of Transparency</a></li>
 							<li><a href="https://nexartis.com/ai-ethics" target="_blank" rel="noopener noreferrer" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">AI Ethics</a></li>
-							<li><a href="mailto:hello@retools.dev" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">hello@retools.dev</a></li>
+							<li><a href="mailto:hello@noelle.ai" class="footer-link text-white/60 text-sm" style="font-family: 'Roboto', sans-serif;">hello@noelle.ai</a></li>
 						</ul>
 					</div>
 
@@ -117,7 +117,7 @@
 					Copyright &copy; {currentYear} Nexartis LLC. All rights reserved.
 				</p>
 				<p class="text-white/30 text-xs" style="font-family: 'Roboto', sans-serif;">
-					Retools is built on Nexartis Technology Stacks
+					Noelle is built on Nexartis Technology Stacks
 				</p>
 			</div>
 		</div>

@@ -44,7 +44,7 @@
 
 				<div class="reveal delay-300 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
 					<a href="/retool" class="w-full sm:w-auto group relative px-8 py-3.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-slate-100 transition-all duration-300 shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] inline-flex items-center justify-center gap-2">
-						Retool My Site
+						Build with Noelle
 						<svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
 					</a>
 					<a href="#how-it-works" class="w-full sm:w-auto px-8 py-3.5 bg-white/5 border border-white/10 text-white text-sm font-semibold rounded-full hover:bg-white/10 transition-all duration-300 inline-flex items-center justify-center">
@@ -55,7 +55,7 @@
 				<!-- Trust bar -->
 				<div class="mt-12 reveal delay-300 flex items-center gap-2 bg-white/5 border border-white/5 rounded-full px-4 py-1.5">
 					<div class="flex text-yellow-400 gap-0.5 text-xs">★★★★★</div>
-					<span class="text-xs text-slate-300">Powered by <span class="text-white font-medium">Retools Engine</span> · AI-Driven Builds · Auto PR Generation</span>
+					<span class="text-xs text-slate-300">Powered by <span class="text-white font-medium">Noelle Engine</span> · AI-Driven Builds · Auto PR Generation</span>
 				</div>
 			</div>
 
@@ -168,10 +168,10 @@
 				<h3 class="text-2xl font-medium text-white mb-2">Built on Proven Infrastructure</h3>
 				<p class="text-brand-200 font-medium mb-4">Every build runs on Cloudflare's global edge.</p>
 				<p class="text-slate-400 text-sm max-w-2xl mx-auto mb-8">
-					Retools uses its own AI build engine. It clones your repo, applies changes, validates the build, and opens a PR — all automatically.
+					Noelle uses its own AI build engine. It clones your repo, applies changes, validates the build, and opens a PR — all automatically.
 				</p>
 				<div class="flex flex-wrap justify-center gap-3">
-					{#each ['Retools Engine', 'Claude AI', 'AI-Driven Builds', 'Auto PR Generation'] as badge}
+					{#each ['Noelle Engine', 'Claude AI', 'AI-Driven Builds', 'Auto PR Generation'] as badge}
 						<span class="px-4 py-1.5 rounded-full glass-panel text-xs text-slate-300 border border-white/10">{badge}</span>
 					{/each}
 				</div>
@@ -243,7 +243,7 @@
 			</p>
 			<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
 				<a href="/retool" class="w-full sm:w-auto px-8 py-3.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-slate-200 transition-all duration-300 inline-flex items-center justify-center gap-2">
-					Retool My Site
+					Build with Noelle
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
 				</a>
 				<a href="/dashboard" class="w-full sm:w-auto px-8 py-3.5 bg-white/5 border border-white/10 text-white text-sm font-semibold rounded-full hover:bg-white/10 transition-all duration-300 inline-flex items-center justify-center">

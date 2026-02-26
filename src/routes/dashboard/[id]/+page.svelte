@@ -74,7 +74,7 @@
 </script>
 
 <svelte:head>
-	<title>{job ? `${job.githubOwner}/${job.githubRepo}` : 'Job'} | Retools</title>
+	<title>{job ? `${job.githubOwner}/${job.githubRepo}` : 'Job'} | Noelle</title>
 </svelte:head>
 
 <Navbar />

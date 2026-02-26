@@ -38,7 +38,7 @@
 </script>
 
 <svelte:head>
-	<title>Retool Your Site | Retools</title>
+	<title>Build with Noelle | Noelle</title>
 </svelte:head>
 
 <Navbar />

@@ -6,8 +6,8 @@
 	<div class="container-wide flex items-center justify-between h-16">
 		<!-- Logo -->
 		<a href="/" class="flex items-center gap-2 group">
-			<div class="w-6 h-6 rounded bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-semibold tracking-tighter">R</div>
-			<span class="text-white font-medium tracking-tight text-sm group-hover:opacity-80 transition-opacity uppercase">Retools</span>
+			<div class="w-6 h-6 rounded bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-semibold tracking-tighter">N</div>
+			<span class="text-white font-medium tracking-tight text-sm group-hover:opacity-80 transition-opacity uppercase">Noelle</span>
 		</a>
 
 		<!-- Desktop links -->
@@ -23,7 +23,7 @@
 		<div class="hidden md:flex items-center gap-3">
 			<a href="/auth" class="text-slate-400 hover:text-white text-sm font-medium transition-colors">Sign In</a>
 			<a href="/retool" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium rounded-full transition-all duration-300 shadow-lg shadow-brand-500/20">
-				Retool My Site
+				Build with Noelle
 			</a>
 		</div>
 
@@ -49,7 +49,7 @@
 			<a href="/dashboard" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors" onclick={() => mobileOpen = false}>Dashboard</a>
 			<hr class="border-white/5" />
 			<a href="/auth" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors">Sign In</a>
-			<a href="/retool" class="block text-center px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-full transition-all">Retool My Site</a>
+			<a href="/retool" class="block text-center px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-full transition-all">Build with Noelle</a>
 		</div>
 	{/if}
 </nav>

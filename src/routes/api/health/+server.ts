@@ -10,7 +10,7 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = async () => {
 	return json({
 		status: 'ok',
-		service: 'retools',
+		service: 'noelle',
 		environment: process.env.NODE_ENV ?? 'unknown',
 		timestamp: new Date().toISOString(),
 		version: '0.1.0'
