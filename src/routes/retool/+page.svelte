@@ -10,6 +10,74 @@
 	let screenshots = $state<ImageAttachment[]>([]);
 	let fileInput: HTMLInputElement;
 
+	// Branch detection
+	let branches = $state<string[]>([]);
+	let branchesLoading = $state(false);
+	let branchesStatus = $state<'idle' | 'found' | 'error'>('idle');
+
+	function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
+		try {
+			const u = new URL(url.trim());
+			if (u.hostname !== 'github.com') return null;
+			const parts = u.pathname.replace(/^\//, '').replace(/\.git$/, '').split('/');
+			if (parts.length < 2 || !parts[0] || !parts[1]) return null;
+			return { owner: parts[0], repo: parts[1] };
+		} catch {
+			return null;
+		}
+	}
+
+	async function fetchBranches() {
+		const parsed = parseGitHubUrl(form.repoUrl);
+		if (!parsed) return;
+
+		branchesLoading = true;
+		branchesStatus = 'idle';
+		branches = [];
+
+		try {
+			const headers: Record<string, string> = {
+				Accept: 'application/vnd.github+json'
+			};
+			if (form.github_token.trim()) {
+				headers['Authorization'] = `Bearer ${form.github_token.trim()}`;
+			}
+			const res = await fetch(
+				`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/branches?per_page=100`,
+				{ headers }
+			);
+			if (!res.ok) throw new Error('not_found');
+			const data: { name: string }[] = await res.json();
+			branches = data.map((b) => b.name);
+
+			// Auto-select sensible default
+			if (!form.branch || !branches.includes(form.branch)) {
+				form.branch =
+					branches.find((b) => b === 'main') ??
+					branches.find((b) => b === 'master') ??
+					branches[0] ??
+					'';
+			}
+			branchesStatus = 'found';
+		} catch {
+			branches = [];
+			branchesStatus = 'error';
+		} finally {
+			branchesLoading = false;
+		}
+	}
+
+	function onRepoUrlBlur() {
+		if (parseGitHubUrl(form.repoUrl)) fetchBranches();
+	}
+
+	function onTokenBlur() {
+		// Re-fetch if URL is already valid (token might unlock private repos)
+		if (form.github_token.trim() && parseGitHubUrl(form.repoUrl) && branchesStatus !== 'found') {
+			fetchBranches();
+		}
+	}
+
 	const MAX_FILE_SIZE_MB = 100;
 
 	/** Convert a File to an ImageAttachment (base64). */
@@ -203,20 +271,58 @@
 						class="form-input"
 						placeholder="https://github.com/your-org/your-repo"
 						bind:value={form.repoUrl}
+						onblur={onRepoUrlBlur}
 					/>
 					<p class="text-xs text-slate-600 mt-1.5">Must be a public GitHub repo or one your account has access to.</p>
 				</div>
 
 				<!-- Branch -->
 				<div>
-					<label for="branch" class="form-label">Branch</label>
-					<input
-						id="branch"
-						type="text"
-						class="form-input"
-						placeholder="main"
-						bind:value={form.branch}
-					/>
+					<label for="branch" class="form-label flex items-center gap-2">
+						Branch
+						{#if branchesLoading}
+							<span class="inline-flex items-center gap-1 text-[11px] text-slate-500">
+								<svg class="animate-spin h-3 w-3 text-brand-400" viewBox="0 0 24 24" fill="none">
+									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+								</svg>
+								Detecting…
+							</span>
+						{:else if branchesStatus === 'found'}
+							<span class="inline-flex items-center gap-1 text-[11px] text-emerald-500">
+								<Icon icon="ph:check-circle-bold" width="12" height="12" />
+								{branches.length} branch{branches.length === 1 ? '' : 'es'} found
+							</span>
+						{:else if branchesStatus === 'error'}
+							<span class="text-[11px] text-slate-600">couldn't auto-detect — type manually</span>
+						{/if}
+					</label>
+
+					{#if branches.length > 0}
+						<select
+							id="branch"
+							class="form-input bg-[#0d0d0d] appearance-none"
+							bind:value={form.branch}
+						>
+							{#each branches as b}
+								<option value={b}>{b}</option>
+							{/each}
+						</select>
+						<p class="text-xs text-slate-600 mt-1.5">
+							Noelle will create a new feature branch from <code class="text-slate-400 bg-white/5 px-1 rounded text-[11px]">{form.branch}</code>.
+						</p>
+					{:else}
+						<input
+							id="branch"
+							type="text"
+							class="form-input"
+							placeholder="main"
+							bind:value={form.branch}
+						/>
+						{#if branchesStatus === 'idle'}
+							<p class="text-xs text-slate-600 mt-1.5">Paste your repo URL above to auto-detect branches.</p>
+						{/if}
+					{/if}
 				</div>
 
 				<!-- GitHub Token -->
@@ -230,7 +336,8 @@
 						class="form-input font-mono tracking-wider"
 						placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
 						bind:value={form.github_token}
-					autocomplete="off"
+						autocomplete="off"
+						onblur={onTokenBlur}
 					/>
 					<p class="text-xs text-slate-600 mt-1.5">
 						Needs <code class="text-slate-400 bg-white/5 px-1 rounded text-[11px]">repo</code> scope. Used only to push a branch and open a PR — never stored.
