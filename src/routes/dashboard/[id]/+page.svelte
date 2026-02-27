@@ -38,7 +38,6 @@
 	}
 
 	onMount(() => {
-		fetchJob();
 		let timer: ReturnType<typeof setTimeout>;
 
 		// Adaptive polling: 2s while building, 15s while waiting for PR merge.
@@ -55,7 +54,10 @@
 			}, delay);
 		}
 
-		scheduleNext();
+		// Await the first fetch before starting the poll loop so that
+		// `queuing` and `job` are already set when scheduleNext runs its guard.
+		fetchJob().then(() => scheduleNext());
+
 		return () => clearTimeout(timer);
 	});
 
