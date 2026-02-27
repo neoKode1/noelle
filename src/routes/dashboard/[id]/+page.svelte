@@ -67,7 +67,11 @@
 
 	let currentStep = $derived.by(() => {
 		const j = job as RetoolJob | null;
-		return j !== null ? PIPELINE_STAGES.indexOf(j.status as JobStatus) : -1;
+		if (!j) return -1;
+		// When the job has reached a terminal state, push past the last stage so
+		// all gears render as "done" (no active gear, no animate-ping, no fast spin).
+		if (TERMINAL_STATUSES.includes(j.status)) return PIPELINE_STAGES.length;
+		return PIPELINE_STAGES.indexOf(j.status as JobStatus);
 	});
 
 	async function handleRefine() {
@@ -270,7 +274,8 @@
 						{@const gearColor = done ? '#f97316' : active ? '#fdba74' : '#3f3f46'}
 						{@const gearGlow = done ? 'drop-shadow(0 0 5px rgba(249,115,22,0.7))' : active ? 'drop-shadow(0 0 10px rgba(249,115,22,1))' : 'none'}
 						{@const shortLabel = (['QUEUE','CLONE','AI.EDIT','BUILD','PUSH','PR.RDY','LIVE'])[i] ?? stage}
-						{@const spinClass = (done || active) ? (i % 2 === 0 ? 'gear-cw' : 'gear-ccw') : ''}
+						{@const isTerminal = job !== null && TERMINAL_STATUSES.includes(job.status)}
+						{@const spinClass = !isTerminal && (done || active) ? (i % 2 === 0 ? 'gear-cw' : 'gear-ccw') : ''}
 						{@const spinDuration = active ? '1.8s' : '5s'}
 
 						<div class="flex flex-col items-center text-center shrink-0 px-0.5">
