@@ -4,6 +4,11 @@
  * Returns the full retool job record by ID.
  * For jobs in `preview_ready` status, automatically checks the GitHub API to
  * detect if the PR has been merged and auto-transitions to `deployed`.
+ *
+ * DELETE /api/jobs/[id]
+ *
+ * Permanently removes a job record from the database.
+ * Only allowed for terminal states: failed, deployed, cancelled.
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
@@ -44,6 +49,23 @@ export const GET: RequestHandler = async ({ params }) => {
 	}
 
 	return json(job);
+};
+
+export const DELETE: RequestHandler = async ({ params }) => {
+	const db = getDB();
+	const { id } = params;
+	if (!id) throw error(400, 'Job ID required');
+
+	const row = await db.prepare(`SELECT status FROM retool_jobs WHERE id = ?`).bind(id).first<{ status: string }>();
+	if (!row) throw error(404, 'Job not found');
+
+	const TERMINAL = ['failed', 'deployed', 'cancelled'];
+	if (!TERMINAL.includes(row.status)) {
+		throw error(400, `Cannot dismiss a job in '${row.status}' state — only terminal jobs can be dismissed`);
+	}
+
+	await db.prepare(`DELETE FROM retool_jobs WHERE id = ?`).bind(id).run();
+	return json({ ok: true, deleted: id });
 };
 
 /**

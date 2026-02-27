@@ -22,8 +22,19 @@
 		ready: jobs.filter((j) => j.status === 'preview_ready').length
 	});
 
+	const TERMINAL_STATUSES = ['deployed', 'failed', 'cancelled'];
+
 	function pipelineStep(status: JobStatus) {
 		return PIPELINE_STAGES.indexOf(status);
+	}
+
+	async function dismissJob(id: string, e: MouseEvent) {
+		e.stopPropagation();
+		if (!confirm('Remove this job from the dashboard?')) return;
+		const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' });
+		if (res.ok) {
+			jobs = jobs.filter((j) => j.id !== id);
+		}
 	}
 </script>
 
@@ -124,6 +135,14 @@
 										onclick={(e) => e.stopPropagation()}>
 										View PR
 									</a>
+								{/if}
+								{#if TERMINAL_STATUSES.includes(job.status)}
+									<button
+										onclick={(e) => dismissJob(job.id, e)}
+										title="Dismiss job"
+										class="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-500 hover:text-red-400 hover:border-red-500/30 transition-all">
+										Dismiss
+									</button>
 								{/if}
 								<Icon icon="ph:caret-right-bold" width="16" height="16" class="text-slate-600 group-hover:text-slate-400 transition-colors" />
 							</div>

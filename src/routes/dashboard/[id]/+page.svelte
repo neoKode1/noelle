@@ -16,6 +16,10 @@
 	let refining = $state(false);
 	let approving = $state(false);
 	let approveError = $state('');
+	let retryToken = $state('');
+	let retrying = $state(false);
+	let retryError = $state('');
+	let dismissing = $state(false);
 
 	const jobId = page.params.id;
 	const IN_PROGRESS_STATUSES = ['queued', 'cloning', 'customizing', 'building', 'deploying'];
@@ -102,6 +106,38 @@
 		} catch { approveError = 'Failed to approve job.'; }
 		finally { approving = false; }
 	}
+
+	async function handleRetry() {
+		if (!job || retrying || !retryToken.trim()) return;
+		retrying = true;
+		retryError = '';
+		try {
+			const res = await fetch(`/api/jobs/${job.id}/retry`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ github_token: retryToken })
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				retryError = data.message || 'Retry failed';
+				return;
+			}
+			const data = await res.json();
+			goto(`/dashboard/${data.id}`);
+		} catch { retryError = 'Failed to submit retry.'; }
+		finally { retrying = false; }
+	}
+
+	async function handleDismiss() {
+		if (!job || dismissing) return;
+		if (!confirm('Remove this job from the dashboard?')) return;
+		dismissing = true;
+		try {
+			const res = await fetch(`/api/jobs/${job.id}`, { method: 'DELETE' });
+			if (res.ok) goto('/dashboard');
+		} catch { /* ignore */ }
+		finally { dismissing = false; }
+	}
 </script>
 
 <svelte:head>
@@ -182,6 +218,14 @@
 						<a href={job.githubRunUrl} target="_blank" rel="noopener noreferrer" class="btn-ghost text-sm">
 							Build Log
 						</a>
+					{/if}
+					{#if TERMINAL_STATUSES.includes(job.status)}
+						<button
+							onclick={handleDismiss}
+							disabled={dismissing}
+							class="btn-ghost text-sm text-slate-500 hover:text-red-400 transition-colors">
+							{dismissing ? 'Removing…' : 'Dismiss'}
+						</button>
 					{/if}
 				</div>
 			</div>
@@ -367,6 +411,41 @@
 										</a>
 									{/if}
 								</div>
+							</div>
+						</div>
+					{/if}
+
+					<!-- Retry (failed only) -->
+					{#if job.status === 'failed'}
+						<div class="glass-panel rounded-xl p-6 border border-red-500/20">
+							<h2 class="text-sm font-medium text-white mb-1 flex items-center gap-2">
+								<Icon icon="ph:arrow-counter-clockwise-bold" width="16" height="16" class="text-red-400" /> Retry
+							</h2>
+							<p class="text-xs text-slate-500 mb-4 leading-relaxed">
+								Re-queue this job with the same prompt and repo. Provide your GitHub token to start a fresh build.
+							</p>
+							{#if retryError}
+								<div class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-3">{retryError}</div>
+							{/if}
+							<div class="space-y-3">
+								<div>
+									<label class="form-label" for="retry-token">GitHub Token</label>
+									<input
+										id="retry-token"
+										type="password"
+										class="form-input font-mono"
+										placeholder="ghp_xxxxxxxxxxxx"
+										bind:value={retryToken}
+										disabled={retrying}
+									/>
+								</div>
+								<button class="btn-secondary gap-2" onclick={handleRetry} disabled={retrying || !retryToken.trim()}>
+									{#if retrying}
+										<Icon icon="ph:spinner-bold" width="16" height="16" class="animate-spin" /> Retrying…
+									{:else}
+										<Icon icon="ph:arrow-counter-clockwise-bold" width="16" height="16" /> Retry Build
+									{/if}
+								</button>
 							</div>
 						</div>
 					{/if}
