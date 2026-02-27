@@ -163,11 +163,16 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	// ── Update DB ────────────────────────────────────────────────
 	binds.push(job_id);
-	await db.prepare(
-		`UPDATE retool_jobs SET ${sets.join(', ')} WHERE id = ?`
-	)
-		.bind(...binds)
-		.run();
+	const sql = `UPDATE retool_jobs SET ${sets.join(', ')} WHERE id = ?`;
+	console.log(`[Webhook] SQL: ${sql}`);
+	console.log(`[Webhook] Binds count: ${binds.length}`);
+
+	try {
+		await db.prepare(sql).bind(...binds).run();
+	} catch (dbErr) {
+		console.error(`[Webhook] DB update FAILED for job ${job_id}:`, dbErr);
+		return json({ error: 'Database update failed', detail: String(dbErr) }, { status: 500 });
+	}
 
 	console.log(`[Webhook] DB updated for job ${job_id}`);
 	return json({ ok: true });
