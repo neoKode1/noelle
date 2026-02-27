@@ -10,10 +10,15 @@
 	let screenshots = $state<ImageAttachment[]>([]);
 	let fileInput: HTMLInputElement;
 
-	// Branch detection
+	// Branch detection + URL validation state
+	// 'idle'    → untouched
+	// 'loading' → fetching branches now
+	// 'success' → green glow  — repo accessible, branches listed
+	// 'warning' → magenta glow — valid GitHub URL but can't reach it yet (private / needs token)
+	// 'error'   → red glow    — repo doesn't exist or URL isn't a valid GitHub URL
 	let branches = $state<string[]>([]);
-	let branchesLoading = $state(false);
-	let branchesStatus = $state<'idle' | 'found' | 'error'>('idle');
+	let urlStatus = $state<'idle' | 'loading' | 'success' | 'warning' | 'error'>('idle');
+	let urlStatusMsg = $state('');
 
 	function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
 		try {
@@ -29,51 +34,76 @@
 
 	async function fetchBranches() {
 		const parsed = parseGitHubUrl(form.repoUrl);
-		if (!parsed) return;
+		if (!parsed) {
+			urlStatus = 'error';
+			urlStatusMsg = 'Not a valid GitHub repository URL.';
+			branches = [];
+			return;
+		}
 
-		branchesLoading = true;
-		branchesStatus = 'idle';
+		urlStatus = 'loading';
+		urlStatusMsg = '';
 		branches = [];
 
 		try {
+			const hasToken = form.github_token.trim().length > 0;
 			const headers: Record<string, string> = {
 				Accept: 'application/vnd.github+json'
 			};
-			if (form.github_token.trim()) {
+			if (hasToken) {
 				headers['Authorization'] = `Bearer ${form.github_token.trim()}`;
 			}
+
 			const res = await fetch(
 				`https://api.github.com/repos/${parsed.owner}/${parsed.repo}/branches?per_page=100`,
 				{ headers }
 			);
-			if (!res.ok) throw new Error('not_found');
-			const data: { name: string }[] = await res.json();
-			branches = data.map((b) => b.name);
 
-			// Auto-select sensible default
-			if (!form.branch || !branches.includes(form.branch)) {
-				form.branch =
-					branches.find((b) => b === 'main') ??
-					branches.find((b) => b === 'master') ??
-					branches[0] ??
-					'';
+			if (res.ok) {
+				const data: { name: string }[] = await res.json();
+				branches = data.map((b) => b.name);
+
+				// Auto-select sensible default
+				if (!form.branch || !branches.includes(form.branch)) {
+					form.branch =
+						branches.find((b) => b === 'main') ??
+						branches.find((b) => b === 'master') ??
+						branches[0] ??
+						'';
+				}
+				urlStatus = 'success';
+				urlStatusMsg = `${branches.length} branch${branches.length === 1 ? '' : 'es'} detected`;
+			} else if (res.status === 401 || res.status === 403) {
+				// Auth required or forbidden
+				if (!hasToken) {
+					urlStatus = 'warning';
+					urlStatusMsg = 'Private repo — add your GitHub token to unlock branches.';
+				} else {
+					urlStatus = 'error';
+					urlStatusMsg = 'Access denied — token may lack repo scope or you don\'t have access.';
+				}
+			} else if (res.status === 404) {
+				urlStatus = 'error';
+				urlStatusMsg = 'Repository not found — check the URL or your token permissions.';
+			} else {
+				urlStatus = 'warning';
+				urlStatusMsg = `GitHub returned ${res.status} — branches couldn't be detected. You can type one manually.`;
 			}
-			branchesStatus = 'found';
 		} catch {
-			branches = [];
-			branchesStatus = 'error';
-		} finally {
-			branchesLoading = false;
+			urlStatus = 'warning';
+			urlStatusMsg = 'Network error — couldn\'t reach GitHub. You can type a branch manually.';
 		}
 	}
 
 	function onRepoUrlBlur() {
-		if (parseGitHubUrl(form.repoUrl)) fetchBranches();
+		const trimmed = form.repoUrl.trim();
+		if (!trimmed) { urlStatus = 'idle'; urlStatusMsg = ''; branches = []; return; }
+		fetchBranches();
 	}
 
 	function onTokenBlur() {
-		// Re-fetch if URL is already valid (token might unlock private repos)
-		if (form.github_token.trim() && parseGitHubUrl(form.repoUrl) && branchesStatus !== 'found') {
+		// Re-fetch if URL is already filled and we haven't succeeded yet
+		if (form.github_token.trim() && form.repoUrl.trim() && urlStatus !== 'success') {
 			fetchBranches();
 		}
 	}
@@ -268,33 +298,57 @@
 					<input
 						id="repoUrl"
 						type="url"
-						class="form-input"
+						class="form-input repo-url-input"
+						class:neon-success={urlStatus === 'success'}
+						class:neon-warning={urlStatus === 'warning'}
+						class:neon-error={urlStatus === 'error'}
+						class:neon-loading={urlStatus === 'loading'}
 						placeholder="https://github.com/your-org/your-repo"
 						bind:value={form.repoUrl}
 						onblur={onRepoUrlBlur}
 					/>
-					<p class="text-xs text-slate-600 mt-1.5">Must be a public GitHub repo or one your account has access to.</p>
+					<!-- Status line below the URL input -->
+					{#if urlStatus === 'loading'}
+						<p class="flex items-center gap-1.5 text-xs text-slate-500 mt-1.5">
+							<svg class="animate-spin h-3 w-3 text-brand-400 shrink-0" viewBox="0 0 24 24" fill="none">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+							</svg>
+							Scanning repository…
+						</p>
+					{:else if urlStatus === 'success'}
+						<p class="flex items-center gap-1.5 text-xs text-emerald-400 mt-1.5">
+							<Icon icon="ph:check-circle-bold" width="13" height="13" class="shrink-0" />
+							Connected · {urlStatusMsg}
+						</p>
+					{:else if urlStatus === 'warning'}
+						<p class="flex items-center gap-1.5 text-xs text-fuchsia-400 mt-1.5">
+							<Icon icon="ph:warning-bold" width="13" height="13" class="shrink-0" />
+							{urlStatusMsg}
+						</p>
+					{:else if urlStatus === 'error'}
+						<p class="flex items-center gap-1.5 text-xs text-red-400 mt-1.5">
+							<Icon icon="ph:x-circle-bold" width="13" height="13" class="shrink-0" />
+							{urlStatusMsg}
+						</p>
+					{:else}
+						<p class="text-xs text-slate-600 mt-1.5">Must be a public GitHub repo or one your account has access to.</p>
+					{/if}
 				</div>
 
 				<!-- Branch -->
 				<div>
 					<label for="branch" class="form-label flex items-center gap-2">
 						Branch
-						{#if branchesLoading}
-							<span class="inline-flex items-center gap-1 text-[11px] text-slate-500">
-								<svg class="animate-spin h-3 w-3 text-brand-400" viewBox="0 0 24 24" fill="none">
-									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-								</svg>
-								Detecting…
-							</span>
-						{:else if branchesStatus === 'found'}
+						{#if urlStatus === 'success'}
 							<span class="inline-flex items-center gap-1 text-[11px] text-emerald-500">
-								<Icon icon="ph:check-circle-bold" width="12" height="12" />
+								<Icon icon="ph:git-branch-bold" width="12" height="12" />
 								{branches.length} branch{branches.length === 1 ? '' : 'es'} found
 							</span>
-						{:else if branchesStatus === 'error'}
-							<span class="text-[11px] text-slate-600">couldn't auto-detect — type manually</span>
+						{:else if urlStatus === 'warning'}
+							<span class="text-[11px] text-fuchsia-500/70">add token to auto-detect</span>
+						{:else if urlStatus === 'error'}
+							<span class="text-[11px] text-slate-600">type manually</span>
 						{/if}
 					</label>
 
@@ -319,7 +373,7 @@
 							placeholder="main"
 							bind:value={form.branch}
 						/>
-						{#if branchesStatus === 'idle'}
+						{#if urlStatus === 'idle'}
 							<p class="text-xs text-slate-600 mt-1.5">Paste your repo URL above to auto-detect branches.</p>
 						{/if}
 					{/if}
@@ -452,3 +506,70 @@
 
 <Footer />
 
+<style>
+	/* ── Neon holographic border pulse on the repo URL input ── */
+
+	@keyframes neon-pulse-green {
+		0%, 100% {
+			box-shadow: 0 0 4px #00ffaa55, 0 0 10px #00ffaa44, 0 0 22px #00ffaa22;
+			border-color: #00ffaa99;
+		}
+		50% {
+			box-shadow: 0 0 8px #00ffaaaa, 0 0 20px #00ffaa88, 0 0 40px #00ffaa44;
+			border-color: #00ffaaee;
+		}
+	}
+
+	@keyframes neon-pulse-magenta {
+		0%, 100% {
+			box-shadow: 0 0 4px #ff00ff55, 0 0 10px #ff00ff44, 0 0 22px #ff00ff22;
+			border-color: #ff00ff88;
+		}
+		50% {
+			box-shadow: 0 0 8px #ff00ffaa, 0 0 20px #ff00ff77, 0 0 40px #ff00ff33;
+			border-color: #ff00ffcc;
+		}
+	}
+
+	@keyframes neon-pulse-red {
+		0%, 100% {
+			box-shadow: 0 0 4px #ff003355, 0 0 10px #ff003344, 0 0 22px #ff003322;
+			border-color: #ff003388;
+		}
+		50% {
+			box-shadow: 0 0 8px #ff0033aa, 0 0 20px #ff003377, 0 0 40px #ff003333;
+			border-color: #ff0033cc;
+		}
+	}
+
+	@keyframes neon-pulse-loading {
+		0%, 100% {
+			box-shadow: 0 0 3px #7c3aed44, 0 0 8px #7c3aed33;
+			border-color: #7c3aed66;
+		}
+		50% {
+			box-shadow: 0 0 6px #7c3aed88, 0 0 16px #7c3aed55;
+			border-color: #7c3aed99;
+		}
+	}
+
+	.repo-url-input.neon-success {
+		animation: neon-pulse-green 2s ease-in-out infinite;
+		border-color: #00ffaa99;
+	}
+
+	.repo-url-input.neon-warning {
+		animation: neon-pulse-magenta 2s ease-in-out infinite;
+		border-color: #ff00ff88;
+	}
+
+	.repo-url-input.neon-error {
+		animation: neon-pulse-red 2s ease-in-out infinite;
+		border-color: #ff003388;
+	}
+
+	.repo-url-input.neon-loading {
+		animation: neon-pulse-loading 1.2s ease-in-out infinite;
+		border-color: #7c3aed66;
+	}
+</style>
