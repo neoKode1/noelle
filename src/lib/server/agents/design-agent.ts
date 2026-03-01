@@ -9,7 +9,7 @@
  *
  * Env vars:
  *   GEMINI_API_KEY  — Google AI API key
- *   DESIGN_MODEL    — Model override (default: gemini-1.5-pro)
+ *   DESIGN_MODEL    — Model override (default: gemini-2.0-flash)
  */
 
 import { GoogleGenerativeAI, type Part } from '@google/generative-ai';

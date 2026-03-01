@@ -9,15 +9,15 @@
  */
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-
-// Keep a generous max duration for the background orchestration work.
-export const config = { maxDuration: 300 };
 import { parseGitHubUrl } from '$lib/types/retool';
 import type { ImageAttachment } from '$lib/types/orchestration';
 import { RETOOLS_SCHEMA_VERSION, type RetoolsDeploymentMessage } from '$lib/types/deployment-contract';
 import { getDB } from '$lib/server/db';
 import { sendToQueue } from '$lib/server/queue';
 import { runOrchestration } from '$lib/server/agents/orchestrator';
+
+// Keep a generous max duration for the background orchestration work.
+export const config = { maxDuration: 300 };
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDB();

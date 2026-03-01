@@ -19,7 +19,17 @@ const STALE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 /** Non-terminal statuses that can go stale. */
 const STALE_STATUSES = ['queued', 'cloning', 'customizing', 'building', 'deploying'];
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ request }) => {
+	// Verify Vercel cron secret when configured (CRON_SECRET env var).
+	// Vercel automatically sends "Authorization: Bearer <secret>" on cron invocations.
+	const cronSecret = process.env.CRON_SECRET;
+	if (cronSecret) {
+		const authHeader = request.headers.get('authorization') ?? '';
+		if (authHeader !== `Bearer ${cronSecret}`) {
+			return json({ error: 'Unauthorized' }, { status: 401 });
+		}
+	}
+
 	const db = getDB();
 	const cutoff = Date.now() - STALE_THRESHOLD_MS;
 

@@ -83,26 +83,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: 'Webhook secret not configured' }, { status: 500 });
 	}
 
-	console.log('[Webhook] Secret length:', webhookSecret.length);
-	console.log('[Webhook] Secret (first 8):', webhookSecret.substring(0, 8));
-	console.log('[Webhook] Received sig:', receivedSig.substring(0, 16) + '...');
-	console.log('[Webhook] Body length:', rawBody.length);
-
 	if (!receivedSig) {
-		console.log('[Webhook] No signature header');
 		return json({ error: 'Missing signature' }, { status: 401 });
 	}
 
 	const { valid, expected } = await verifySignature(rawBody, receivedSig, webhookSecret);
 
 	if (!valid) {
-		console.log('[Webhook] Signature MISMATCH');
-		console.log('[Webhook] Expected sig:', expected.substring(0, 16) + '...');
-		console.log('[Webhook] Received sig:', receivedSig.substring(0, 16) + '...');
+		console.error('[Webhook] Signature MISMATCH — rejecting request');
 		return json({ error: 'Invalid signature' }, { status: 401 });
 	}
-
-	console.log('[Webhook] Signature verified ✅');
 
 	// ── Parse payload ────────────────────────────────────────────
 	const payload = JSON.parse(rawBody);
@@ -119,10 +109,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			console.error(`[Webhook] REJECTED: run URL owner is "${owner}", expected "${ALLOWED_BUILDER_OWNER}"`);
 			return json({ error: 'Unauthorized source repository' }, { status: 403 });
 		}
-		console.log(`[Webhook] Source owner verified: ${owner} ✅`);
 	}
-
-	console.log(`[Webhook] Job ${job_id} → status: ${builderStatus}`);
 
 	const now = Date.now();
 
@@ -164,8 +151,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	// ── Update DB ────────────────────────────────────────────────
 	binds.push(job_id);
 	const sql = `UPDATE retool_jobs SET ${sets.join(', ')} WHERE id = ?`;
-	console.log(`[Webhook] SQL: ${sql}`);
-	console.log(`[Webhook] Binds count: ${binds.length}`);
 
 	try {
 		await db.prepare(sql).bind(...binds).run();
@@ -174,7 +159,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: 'Database update failed', detail: String(dbErr) }, { status: 500 });
 	}
 
-	console.log(`[Webhook] DB updated for job ${job_id}`);
 	return json({ ok: true });
 };
 
