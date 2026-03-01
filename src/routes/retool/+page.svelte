@@ -99,9 +99,21 @@
 		}
 	}
 
+	function onRepoUrlInput() {
+		// Activate the RTE card immediately while typing so users see it respond
+		if (form.repoUrl.trim()) {
+			activeCard = 'rte';
+		} else {
+			activeCard = 'sys';
+			urlStatus = 'idle';
+			urlStatusMsg = '';
+			branches = [];
+		}
+	}
+
 	function onRepoUrlBlur() {
 		const trimmed = form.repoUrl.trim();
-		if (!trimmed) { urlStatus = 'idle'; urlStatusMsg = ''; branches = []; return; }
+		if (!trimmed) { urlStatus = 'idle'; urlStatusMsg = ''; branches = []; activeCard = 'sys'; return; }
 		activeCard = 'rte';
 		fetchBranches();
 	}
@@ -328,7 +340,9 @@
 				</div>
 				<div class="relative z-10 mt-auto">
 					<h3 class="text-xs text-zinc-200 font-medium tracking-tight mb-0.5">Adaptive Routing</h3>
-					<p class="text-[11px] text-zinc-500 leading-relaxed">Analyzing signal path…</p>
+					<p class="text-[11px] text-zinc-500 leading-relaxed">
+						{#if urlStatus === 'loading'}Scanning repository…{:else if urlStatus === 'success'}Route confirmed ✓{:else if urlStatus === 'error'}Route unavailable.{:else if urlStatus === 'warning'}Auth required.{:else}Analyzing signal path…{/if}
+					</p>
 				</div>
 			</div>
 
@@ -531,6 +545,7 @@
 					<label for="repoUrl" class="form-label">
 						GitHub Repository URL
 					</label>
+					<div class="relative">
 					<input
 						id="repoUrl"
 						type="url"
@@ -539,19 +554,31 @@
 						class:neon-warning={urlStatus === 'warning'}
 						class:neon-error={urlStatus === 'error'}
 						class:neon-loading={urlStatus === 'loading'}
+						class:pr-10={urlStatus === 'loading'}
 						placeholder="https://github.com/your-org/your-repo"
 						bind:value={form.repoUrl}
+						oninput={onRepoUrlInput}
 						onblur={onRepoUrlBlur}
 					/>
-					<!-- Status line below the URL input -->
 					{#if urlStatus === 'loading'}
-						<p class="flex items-center gap-1.5 text-xs text-slate-500 mt-1.5">
-							<svg class="animate-spin h-3 w-3 text-brand-400 shrink-0" viewBox="0 0 24 24" fill="none">
+						<!-- Inline spinner inside the right edge of the input -->
+						<div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1.5">
+							<svg class="animate-spin h-4 w-4 text-brand-400 shrink-0" viewBox="0 0 24 24" fill="none">
 								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
 								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
 							</svg>
-							Scanning repository…
-						</p>
+						</div>
+					{/if}
+				</div>
+				<!-- Status line below the URL input -->
+				{#if urlStatus === 'loading'}
+					<p class="flex items-center gap-1.5 text-xs text-brand-400 mt-1.5 font-medium">
+						<svg class="animate-spin h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+						</svg>
+						Validating repository — other fields are locked until confirmed…
+					</p>
 					{:else if urlStatus === 'success'}
 						<p class="flex items-center gap-1.5 text-xs text-emerald-400 mt-1.5">
 							<Icon icon="ph:check-circle-bold" width="13" height="13" class="shrink-0" />
@@ -591,7 +618,10 @@
 					{#if branches.length > 0}
 						<select
 							id="branch"
-							class="form-input bg-[#0d0d0d] appearance-none"
+							class="form-input bg-[#0d0d0d] appearance-none transition-opacity duration-200"
+							class:opacity-40={urlStatus === 'loading'}
+							class:cursor-not-allowed={urlStatus === 'loading'}
+							disabled={urlStatus === 'loading'}
 							bind:value={form.branch}
 						>
 							{#each branches as b}
@@ -605,7 +635,10 @@
 						<input
 							id="branch"
 							type="text"
-							class="form-input"
+							class="form-input transition-opacity duration-200"
+							class:opacity-40={urlStatus === 'loading'}
+							class:cursor-not-allowed={urlStatus === 'loading'}
+							disabled={urlStatus === 'loading'}
 							placeholder="main"
 							bind:value={form.branch}
 						/>
@@ -623,11 +656,14 @@
 					<input
 						id="github_token"
 						type="password"
-						class="form-input font-mono tracking-wider"
+						class="form-input font-mono tracking-wider transition-opacity duration-200"
+						class:opacity-40={urlStatus === 'loading'}
+						class:cursor-not-allowed={urlStatus === 'loading'}
+						disabled={urlStatus === 'loading'}
 						placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
 						bind:value={form.github_token}
 						autocomplete="off"
-						onfocus={() => { activeCard = 'fal'; }}
+						onfocus={() => { if (urlStatus !== 'loading') activeCard = 'fal'; }}
 						onblur={onTokenBlur}
 					/>
 					<p class="text-xs text-slate-600 mt-1.5">
@@ -642,7 +678,10 @@
 					<div class="relative">
 						<textarea
 							id="prompt"
-							class="form-input min-h-[160px] resize-y pr-12"
+							class="form-input min-h-[160px] resize-y pr-12 transition-opacity duration-200"
+							class:opacity-40={urlStatus === 'loading'}
+							class:cursor-not-allowed={urlStatus === 'loading'}
+							disabled={urlStatus === 'loading'}
 							placeholder="e.g. Make the hero section darker with a gradient background. Add a pricing page with three tiers. Fix the mobile hamburger menu animation."
 							bind:value={form.prompt}
 						onpaste={handlePaste}
@@ -710,9 +749,18 @@
 				<!-- Submit -->
 				<button
 					type="submit"
-					class="btn-secondary w-full gap-2 py-3"
+					class="btn-secondary w-full gap-2 py-3 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+					disabled={urlStatus === 'loading' || submitting}
 				>
-					<Icon icon="ph:paper-plane-right-bold" width="16" height="16" /> Build with Noelle
+					{#if urlStatus === 'loading'}
+						<svg class="animate-spin h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+						</svg>
+						Validating URL…
+					{:else}
+						<Icon icon="ph:paper-plane-right-bold" width="16" height="16" /> Build with Noelle
+					{/if}
 				</button>
 			</form>
 
@@ -781,12 +829,12 @@
 
 	@keyframes neon-pulse-loading {
 		0%, 100% {
-			box-shadow: 0 0 3px #7c3aed44, 0 0 8px #7c3aed33;
-			border-color: #7c3aed66;
+			box-shadow: 0 0 6px #f9731644, 0 0 14px #f9731633, 0 0 28px #f9731622;
+			border-color: #f9731699;
 		}
 		50% {
-			box-shadow: 0 0 6px #7c3aed88, 0 0 16px #7c3aed55;
-			border-color: #7c3aed99;
+			box-shadow: 0 0 10px #f97316aa, 0 0 24px #f9731677, 0 0 48px #f9731644;
+			border-color: #f97316cc;
 		}
 	}
 
@@ -806,8 +854,8 @@
 	}
 
 	.repo-url-input.neon-loading {
-		animation: neon-pulse-loading 1.2s ease-in-out infinite;
-		border-color: #7c3aed66;
+		animation: neon-pulse-loading 0.9s ease-in-out infinite;
+		border-color: #f9731699;
 	}
 
 	/* ── Hardware Telemetry Step Cards ── */
