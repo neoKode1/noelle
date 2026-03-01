@@ -11,9 +11,12 @@
 		if (!email.trim()) return;
 		sending = true;
 		try {
-			// TODO: wire to real auth endpoint
-			await new Promise((r) => setTimeout(r, 1000));
-			sent = true;
+			const res = await fetch('/api/auth/magic-link', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: email.trim().toLowerCase() })
+			});
+			if (res.ok) sent = true;
 		} finally {
 			sending = false;
 		}

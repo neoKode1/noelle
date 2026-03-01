@@ -10,6 +10,7 @@ declare global {
 				email: string;
 				name?: string | null;
 				githubUsername?: string | null;
+				plan: string;
 			} | null;
 		}
 		// interface PageData {}

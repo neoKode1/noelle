@@ -19,8 +19,33 @@ import { runOrchestration } from '$lib/server/agents/orchestrator';
 // Keep a generous max duration for the background orchestration work.
 export const config = { maxDuration: 300 };
 
-export const POST: RequestHandler = async ({ request, platform }) => {
+const FREE_LIMIT = 5;
+
+export const POST: RequestHandler = async ({ request, platform, locals }) => {
 	const db = getDB();
+
+	// ── Auth gate ────────────────────────────────────────────────────────────
+	const user = locals.user;
+	if (!user) return json({ error: 'auth_required' }, { status: 401 });
+
+	// ── Usage check ──────────────────────────────────────────────────────────
+	const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+		.split(',')
+		.map((e) => e.trim().toLowerCase())
+		.filter(Boolean);
+	const isAdmin = adminEmails.includes(user.email.toLowerCase());
+
+	if (!isAdmin) {
+		const fresh = await db
+			.prepare(`SELECT usage_count, plan FROM users WHERE id = ?`)
+			.bind(user.id)
+			.first<{ usage_count: number; plan: string }>();
+		const plan = fresh?.plan ?? 'free';
+		const usageCount = fresh?.usage_count ?? 0;
+		if (plan === 'free' && usageCount >= FREE_LIMIT) {
+			return json({ error: 'usage_limit', upgradeUrl: '/billing' }, { status: 402 });
+		}
+	}
 
 	const body = await request.json();
 	const {
@@ -93,19 +118,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	// ── Persist job to D1 immediately ────────────────────────────
 	// This must happen before we return so the dashboard page can load the job.
 	try {
-		// Upsert sentinel anonymous user so FK constraint is always satisfied.
-		await db.prepare(
-			`INSERT OR IGNORE INTO users (id, email, name, created_at, updated_at)
-			 VALUES ('anonymous', 'anonymous@noelle.ai', 'Anonymous', ?, ?)`
-		)
-			.bind(now, now)
-			.run();
-
 		await db.prepare(
 			`INSERT INTO retool_jobs (id, user_id, github_owner, github_repo, branch, prompt, status, created_at, updated_at)
 			 VALUES (?, ?, ?, ?, ?, ?, 'queued', ?, ?)`
 		)
-			.bind(jobId, 'anonymous', parsed.owner, parsed.repo, resolvedBranch, prompt, now, now)
+			.bind(jobId, user.id, parsed.owner, parsed.repo, resolvedBranch, prompt, now, now)
 			.run();
 	} catch (e) {
 		console.error('[db] Failed to persist job to D1:', e);
@@ -124,8 +141,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		prompt: prompt,
 		orchestrated_prompt: undefined,
 		image_attachments: imageAttachments,
-		user_email: 'noelle@nexartis.com',
-		user_name: 'Noelle AI'
+		user_email: user.email,
+		user_name: user.email.split('@')[0]
 	};
 
 	// ── Send to builder queue immediately ────────────────────────
@@ -139,6 +156,14 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			.bind(`Queue error: ${String(e)}`, Date.now(), jobId)
 			.run();
 		throw error(500, 'Failed to enqueue deployment');
+	}
+
+	// ── Increment usage count (non-admin free users only) ────────
+	if (!isAdmin) {
+		await db
+			.prepare(`UPDATE users SET usage_count = usage_count + 1, updated_at = ? WHERE id = ?`)
+			.bind(Date.now(), user.id)
+			.run();
 	}
 
 	// ── Run AI orchestration in the background ───────────────────

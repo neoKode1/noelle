@@ -24,6 +24,10 @@
 	let activeCard = $state<'sys' | 'rte' | 'fal' | 'ai'>('sys');
 	let submitting = $state(false);
 
+	// Paywall / upgrade modal
+	let showUpgradeModal = $state(false);
+	let upgradeLoading = $state<'annual' | 'payg' | null>(null);
+
 	function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
 		try {
 			const u = new URL(url.trim());
@@ -192,20 +196,72 @@
 		// Generate the job ID here so we can navigate before the API responds.
 		const jobId = `job-${crypto.randomUUID()}`;
 
-		// Brief pause to show AI radar animation before navigating.
+		// Brief pause to show AI radar animation.
 		await new Promise((r) => setTimeout(r, 900));
 
-		// Navigate immediately — the dashboard will poll until the job exists.
-		goto(`/dashboard/${jobId}`);
+		try {
+			const res = await fetch('/api/retool', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ...form, screenshots, job_id: jobId })
+			});
 
-		// Fire the API call in the background (not awaited before navigation).
-		fetch('/api/retool', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ ...form, screenshots, job_id: jobId })
-		}).catch((e) => {
-			console.error('[retool] background submission error:', e);
-		});
+			if (res.status === 401) {
+				// Not signed in — redirect to auth
+				submitting = false;
+				activeCard = 'sys';
+				goto('/auth');
+				return;
+			}
+
+			if (res.status === 402) {
+				// Usage limit hit — show upgrade modal
+				submitting = false;
+				activeCard = 'sys';
+				showUpgradeModal = true;
+				return;
+			}
+
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({})) as { message?: string };
+				errorMsg = err?.message ?? `Server error (${res.status})`;
+				submitting = false;
+				activeCard = 'fal';
+				return;
+			}
+		} catch (e) {
+			console.error('[retool] submission error:', e);
+			errorMsg = 'Network error. Please try again.';
+			submitting = false;
+			activeCard = 'fal';
+			return;
+		}
+
+		// Navigate to dashboard now that the job is queued.
+		goto(`/dashboard/${jobId}`);
+	}
+
+	async function startCheckout(type: 'annual' | 'payg') {
+		upgradeLoading = type;
+		try {
+			const res = await fetch('/api/billing/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ type })
+			});
+			const data = await res.json() as { url?: string; error?: string };
+			if (data.url) {
+				window.location.href = data.url;
+			} else {
+				errorMsg = data.error ?? 'Billing error. Please try again.';
+				showUpgradeModal = false;
+			}
+		} catch {
+			errorMsg = 'Network error. Please try again.';
+			showUpgradeModal = false;
+		} finally {
+			upgradeLoading = null;
+		}
 	}
 </script>
 
@@ -788,6 +844,81 @@
 		</div><!-- end flex row -->
 	</div><!-- end container-content -->
 </main>
+
+<!-- ── Upgrade / Paywall Modal ─────────────────────────────────────────── -->
+{#if showUpgradeModal}
+<div
+	class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+	role="dialog"
+	aria-modal="true"
+	aria-label="Upgrade required"
+>
+	<div class="relative glass-panel rounded-2xl p-8 w-full max-w-md mx-4 border border-orange-500/30 shadow-xl shadow-orange-500/10">
+		<!-- Close -->
+		<button
+			class="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+			onclick={() => { showUpgradeModal = false; }}
+			aria-label="Close"
+		>
+			<Icon icon="ph:x-bold" width="20" height="20" />
+		</button>
+
+		<!-- Header -->
+		<div class="text-center mb-6">
+			<div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 mb-4">
+				<Icon icon="ph:lightning-bold" width="24" height="24" class="text-orange-400" />
+			</div>
+			<h2 class="text-xl font-semibold text-white mb-1">You've used your 5 free runs</h2>
+			<p class="text-slate-400 text-sm">Choose a plan to keep building with Noelle.</p>
+		</div>
+
+		<!-- Plans -->
+		<div class="space-y-3 mb-6">
+			<!-- Annual -->
+			<button
+				class="w-full flex items-center justify-between rounded-xl border border-orange-500/40 bg-orange-500/5 hover:bg-orange-500/10 px-5 py-4 transition-colors group disabled:opacity-60"
+				onclick={() => startCheckout('annual')}
+				disabled={upgradeLoading !== null}
+			>
+				<div class="text-left">
+					<div class="text-white font-medium flex items-center gap-2">
+						<Icon icon="ph:crown-bold" width="16" height="16" class="text-orange-400" />
+						Unlimited — $15 / year
+					</div>
+					<div class="text-slate-400 text-xs mt-0.5">Unlimited runs, priority queue, full AI pipeline</div>
+				</div>
+				{#if upgradeLoading === 'annual'}
+					<Icon icon="ph:spinner-bold" width="18" height="18" class="text-orange-400 animate-spin shrink-0" />
+				{:else}
+					<Icon icon="ph:arrow-right-bold" width="18" height="18" class="text-orange-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+				{/if}
+			</button>
+
+			<!-- Pay-per-use -->
+			<button
+				class="w-full flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 px-5 py-4 transition-colors group disabled:opacity-60"
+				onclick={() => startCheckout('payg')}
+				disabled={upgradeLoading !== null}
+			>
+				<div class="text-left">
+					<div class="text-white font-medium flex items-center gap-2">
+						<Icon icon="ph:coins-bold" width="16" height="16" class="text-slate-300" />
+						One more run — $5
+					</div>
+					<div class="text-slate-400 text-xs mt-0.5">Single additional run, no commitment</div>
+				</div>
+				{#if upgradeLoading === 'payg'}
+					<Icon icon="ph:spinner-bold" width="18" height="18" class="text-slate-400 animate-spin shrink-0" />
+				{:else}
+					<Icon icon="ph:arrow-right-bold" width="18" height="18" class="text-slate-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+				{/if}
+			</button>
+		</div>
+
+		<p class="text-xs text-slate-600 text-center">Payments processed securely by Stripe.</p>
+	</div>
+</div>
+{/if}
 
 <Footer />
 
