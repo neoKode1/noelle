@@ -2,14 +2,26 @@
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Icon from '@iconify/svelte';
+	import { page } from '$app/state';
 
 	let email = $state('');
 	let sent = $state(false);
 	let sending = $state(false);
 
+	// Read error from URL: ?error=invalid_or_expired | missing_token
+	const errorParam = page.url.searchParams.get('error');
+	let errorBanner = $state(
+		errorParam === 'invalid_or_expired'
+			? 'That sign-in link has expired or already been used. Request a new one below.'
+			: errorParam === 'missing_token'
+				? 'Sign-in link is missing a token. Please request a fresh one.'
+				: ''
+	);
+
 	async function handleLogin() {
 		if (!email.trim()) return;
 		sending = true;
+		errorBanner = '';
 		try {
 			const res = await fetch('/api/auth/magic-link', {
 				method: 'POST',
@@ -34,6 +46,13 @@
 	<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] hero-glow pointer-events-none opacity-40"></div>
 
 	<div class="relative z-10 w-full max-w-md mx-auto px-4 py-12">
+		{#if errorBanner}
+			<div class="mb-6 flex items-start gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+				<Icon icon="ph:warning-circle-bold" width="18" height="18" class="shrink-0 mt-0.5" />
+				<span>{errorBanner}</span>
+			</div>
+		{/if}
+
 		{#if sent}
 			<!-- Success state -->
 			<div class="glass-panel rounded-2xl p-10 text-center">

@@ -4,18 +4,32 @@
 
 	let mobileOpen = $state(false);
 	let scrolled = $state(false);
+	let user = $state<{ email: string; plan: string } | null>(null);
+	let authLoading = $state(true);
 
 	const links = [
 		{ href: '/#how-it-works', label: 'How It Works' },
 		{ href: '/#use-cases',    label: 'Use Cases'    },
 		{ href: '/mcp',           label: 'MCP Servers'  },
-		{ href: '/agents/new',    label: 'Build Agent'  },
-		{ href: '/dashboard',     label: 'Dashboard'    },
 	];
+
+	async function logout() {
+		await fetch('/api/auth/logout', { method: 'POST' });
+		user = null;
+		window.location.href = '/';
+	}
 
 	onMount(() => {
 		const onScroll = () => { scrolled = window.scrollY > 80; };
 		window.addEventListener('scroll', onScroll, { passive: true });
+
+		// Fetch current user session
+		fetch('/api/auth/me')
+			.then((r) => (r.ok ? r.json() : null))
+			.then((data) => { user = data; })
+			.catch(() => { user = null; })
+			.finally(() => { authLoading = false; });
+
 		return () => window.removeEventListener('scroll', onScroll);
 	});
 </script>
@@ -39,7 +53,20 @@
 
 		<!-- CTA -->
 		<div class="hidden md:flex items-center gap-3">
-			<a href="/auth" class="text-slate-400 hover:text-white text-sm font-medium transition-colors">Sign In</a>
+			{#if !authLoading}
+				{#if user}
+					<span class="text-slate-500 text-xs font-mono truncate max-w-[140px]">{user.email}</span>
+					{#if user.plan === 'free'}
+						<a href="/billing" class="text-xs text-orange-400 hover:text-orange-300 font-medium transition-colors">Upgrade</a>
+					{/if}
+					<button onclick={logout} class="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-1">
+						<Icon icon="ph:sign-out-bold" width="15" height="15" />
+						Sign Out
+					</button>
+				{:else}
+					<a href="/auth" class="text-slate-400 hover:text-white text-sm font-medium transition-colors">Sign In</a>
+				{/if}
+			{/if}
 			<a href="/retool" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium rounded-full transition-all duration-300 shadow-lg shadow-brand-500/20">
 				Build with Noelle
 			</a>
@@ -66,7 +93,15 @@
 					onclick={() => mobileOpen = false}>{link.label}</a>
 			{/each}
 			<hr class="border-white/5" />
-			<a href="/auth" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors">Sign In</a>
+			{#if user}
+				<div class="text-xs font-mono text-slate-500 truncate">{user.email}</div>
+				{#if user.plan === 'free'}
+					<a href="/billing" class="block text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors" onclick={() => mobileOpen = false}>Upgrade</a>
+				{/if}
+				<button onclick={logout} class="block text-sm font-medium text-slate-400 hover:text-white transition-colors w-full text-left">Sign Out</button>
+			{:else}
+				<a href="/auth" class="block text-sm font-medium text-slate-400 hover:text-white transition-colors">Sign In</a>
+			{/if}
 			<a href="/retool" class="block text-center px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-full transition-all">Build with Noelle</a>
 		</div>
 	{/if}

@@ -25,7 +25,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 	try {
 		await getOrCreateUser(email);
 		const token = await createMagicToken(email);
-		const verifyUrl = `${url.origin}/api/auth/verify?token=${token}`;
+		const verifyUrl = `${url.origin}/auth/verify?token=${token}`;
 
 		const resendKey = process.env.RESEND_API_KEY;
 		if (resendKey) {
