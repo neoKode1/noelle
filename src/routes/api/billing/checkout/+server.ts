@@ -1,28 +1,21 @@
 /**
  * POST /api/billing/checkout
- * Body: { type: 'annual' | 'payg' }
  *
- * Creates a Stripe Checkout session and returns the redirect URL.
- * - annual → subscription mode ($15/year)
- * - payg   → payment mode ($5 one-time)
+ * Creates a Stripe Checkout session for the single $19.99/month subscription
+ * and returns the redirect URL.
  */
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getDB } from '$lib/server/db';
 
-export const POST: RequestHandler = async ({ request, locals, url }) => {
+export const POST: RequestHandler = async ({ locals, url }) => {
 	const user = locals.user;
 	if (!user) return json({ error: 'not_authenticated' }, { status: 401 });
 
 	const stripeKey = process.env.STRIPE_SECRET_KEY;
 	if (!stripeKey) return json({ error: 'billing_unavailable' }, { status: 503 });
 
-	const body = await request.json();
-	const type: 'annual' | 'payg' = body?.type === 'payg' ? 'payg' : 'annual';
-
-	const annualPriceId = process.env.STRIPE_ANNUAL_PRICE_ID;
-	const paygPriceId = process.env.STRIPE_PAYG_PRICE_ID;
-	const priceId = type === 'payg' ? paygPriceId : annualPriceId;
+	const priceId = process.env.STRIPE_PRICE_ID;
 	if (!priceId) return json({ error: 'price_not_configured' }, { status: 503 });
 
 	// Get or create Stripe customer
@@ -51,18 +44,16 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
 	}
 
 	const origin = url.origin;
-	const mode = type === 'payg' ? 'payment' : 'subscription';
 
 	const params = new URLSearchParams({
 		customer: customerId,
-		mode,
+		mode: 'subscription',
 		'line_items[0][price]': priceId,
 		'line_items[0][quantity]': '1',
 		success_url: `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
 		cancel_url: `${origin}/billing`,
 		'metadata[user_id]': user.id,
-		'metadata[email]': user.email,
-		'metadata[type]': type
+		'metadata[email]': user.email
 	});
 
 	const sessionRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {

@@ -3,7 +3,7 @@
  * Stripe webhook handler — verifies HMAC-SHA256 signature using Node.js crypto.
  *
  * Handles:
- *   checkout.session.completed  → set plan='pro' (annual) or increment payg usage
+ *   checkout.session.completed    → set plan='pro' (subscription activated)
  *   customer.subscription.deleted → downgrade to free
  */
 import { json } from '@sveltejs/kit';
@@ -66,20 +66,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (event.type === 'checkout.session.completed') {
 		const meta = (obj.metadata ?? {}) as Record<string, string>;
 		const userId = meta.user_id;
-		const type = meta.type ?? 'annual';
 		const customerId = obj.customer as string | undefined;
 
 		if (userId) {
-			if (type === 'annual') {
-				// Upgrade to pro
-				await db
-					.prepare(
-						`UPDATE users SET plan = 'pro', stripe_customer_id = ?, stripe_subscription_id = ?, updated_at = ? WHERE id = ?`
-					)
-					.bind(customerId ?? null, obj.subscription ?? null, Date.now(), userId)
-					.run();
-			}
-			// payg: usage was already checked/decremented at job creation time; nothing extra needed
+			// All checkout completions are subscriptions — upgrade to pro
+			await db
+				.prepare(
+					`UPDATE users SET plan = 'pro', stripe_customer_id = ?, stripe_subscription_id = ?, updated_at = ? WHERE id = ?`
+				)
+				.bind(customerId ?? null, obj.subscription ?? null, Date.now(), userId)
+				.run();
 		}
 	} else if (event.type === 'customer.subscription.deleted') {
 		const customerId = obj.customer as string | undefined;

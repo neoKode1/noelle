@@ -26,7 +26,7 @@
 
 	// Paywall / upgrade modal
 	let showUpgradeModal = $state(false);
-	let upgradeLoading = $state<'annual' | 'payg' | null>(null);
+	let upgradeLoading = $state(false);
 
 	function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
 		try {
@@ -241,13 +241,12 @@
 		goto(`/dashboard/${jobId}`);
 	}
 
-	async function startCheckout(type: 'annual' | 'payg') {
-		upgradeLoading = type;
+	async function startCheckout() {
+		upgradeLoading = true;
 		try {
 			const res = await fetch('/api/billing/checkout', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ type })
+				headers: { 'Content-Type': 'application/json' }
 			});
 			const data = await res.json() as { url?: string; error?: string };
 			if (data.url) {
@@ -260,7 +259,7 @@
 			errorMsg = 'Network error. Please try again.';
 			showUpgradeModal = false;
 		} finally {
-			upgradeLoading = null;
+			upgradeLoading = false;
 		}
 	}
 </script>
@@ -872,50 +871,29 @@
 			<p class="text-slate-400 text-sm">Choose a plan to keep building with Noelle.</p>
 		</div>
 
-		<!-- Plans -->
-		<div class="space-y-3 mb-6">
-			<!-- Annual -->
+		<!-- Plan -->
+		<div class="mb-6">
 			<button
 				class="w-full flex items-center justify-between rounded-xl border border-orange-500/40 bg-orange-500/5 hover:bg-orange-500/10 px-5 py-4 transition-colors group disabled:opacity-60"
-				onclick={() => startCheckout('annual')}
-				disabled={upgradeLoading !== null}
+				onclick={startCheckout}
+				disabled={upgradeLoading}
 			>
 				<div class="text-left">
 					<div class="text-white font-medium flex items-center gap-2">
 						<Icon icon="ph:crown-bold" width="16" height="16" class="text-orange-400" />
-						Unlimited — $15 / year
+						Unlimited — $19.99 / month
 					</div>
-					<div class="text-slate-400 text-xs mt-0.5">Unlimited runs, priority queue, full AI pipeline</div>
+					<div class="text-slate-400 text-xs mt-0.5">Unlimited runs, priority queue, full AI pipeline · cancel anytime</div>
 				</div>
-				{#if upgradeLoading === 'annual'}
+				{#if upgradeLoading}
 					<Icon icon="ph:spinner-bold" width="18" height="18" class="text-orange-400 animate-spin shrink-0" />
 				{:else}
 					<Icon icon="ph:arrow-right-bold" width="18" height="18" class="text-orange-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
 				{/if}
 			</button>
-
-			<!-- Pay-per-use -->
-			<button
-				class="w-full flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700/50 px-5 py-4 transition-colors group disabled:opacity-60"
-				onclick={() => startCheckout('payg')}
-				disabled={upgradeLoading !== null}
-			>
-				<div class="text-left">
-					<div class="text-white font-medium flex items-center gap-2">
-						<Icon icon="ph:coins-bold" width="16" height="16" class="text-slate-300" />
-						One more run — $5
-					</div>
-					<div class="text-slate-400 text-xs mt-0.5">Single additional run, no commitment</div>
-				</div>
-				{#if upgradeLoading === 'payg'}
-					<Icon icon="ph:spinner-bold" width="18" height="18" class="text-slate-400 animate-spin shrink-0" />
-				{:else}
-					<Icon icon="ph:arrow-right-bold" width="18" height="18" class="text-slate-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-				{/if}
-			</button>
 		</div>
 
-		<p class="text-xs text-slate-600 text-center">Payments processed securely by Stripe.</p>
+		<p class="text-xs text-slate-600 text-center">Payments processed securely by Stripe · cancel anytime.</p>
 	</div>
 </div>
 {/if}
