@@ -10,7 +10,7 @@
 
 	onMount(async () => {
 		try {
-			const res = await fetch('/api/jobs?all=1');
+			const res = await fetch('/api/jobs');
 			if (res.ok) jobs = await res.json();
 		} catch { /* empty */ }
 		loading = false;

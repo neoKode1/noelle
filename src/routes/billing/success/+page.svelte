@@ -34,7 +34,7 @@
 			</a>
 
 			<p class="text-xs text-slate-600 mt-6">
-				Questions? <a href="mailto:hello@retools.dev" class="text-slate-400 hover:text-white transition-colors underline underline-offset-2">hello@retools.dev</a>
+				Questions? <a href="mailto:hello@thenoelle.app" class="text-slate-400 hover:text-white transition-colors underline underline-offset-2">hello@thenoelle.app</a>
 			</p>
 		</div>
 	</div>
